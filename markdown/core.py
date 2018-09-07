@@ -328,7 +328,8 @@ class Markdown(object):
         if input:
             if isinstance(input, util.string_type):
                 input_file = codecs.open(input, mode="r", encoding=encoding)
-                self.input_file_path = os.path.dirname(os.path.abspath(input))
+                #self.input_file_path = os.path.dirname(os.path.abspath(input))
+                self.input_file_path = os.path.abspath(input)
             else:
                 input_file = codecs.getreader(encoding)(input)
             text = input_file.read()
@@ -415,3 +416,4 @@ def markdownFromFile(**kwargs):
     md.convertFile(kwargs.get('input', None),
                    kwargs.get('output', None),
                    kwargs.get('encoding', None))
+

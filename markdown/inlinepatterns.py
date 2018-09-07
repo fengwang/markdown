@@ -619,7 +619,8 @@ class ImageInlineProcessor(LinkInlineProcessor):
                 converted_src = ''.join([ 'data:', file_mime_type, ';base64,'])
                 with open( media_path, 'rb' ) as image_file:
                     image_data = base64.b64encode(image_file.read())
-                converted_src = ''.join([converted_src.decode('utf-8'), image_data.decode('utf-8')])
+                #converted_src = ''.join([converted_src.decode('utf-8'), image_data.decode('utf-8')])
+                converted_src = ''.join([converted_src, image_data.decode('utf-8')])
         # replace src
         src = ( converted_src, src )[ converted_src is None ]
         el.set("src", src)
