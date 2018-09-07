@@ -24,6 +24,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import codecs
 import sys
+import os
 import logging
 import importlib
 import pkg_resources
@@ -82,6 +83,10 @@ class Markdown(object):
         * tab_length: Length of tabs in the source. Default: 4
 
         """
+        self.input_file_path = None
+
+        input_file = kwargs.get('input', 'default.md')
+        self.input_file_path = os.path.abspath(input_file)
 
         self.tab_length = kwargs.get('tab_length', 4)
 
@@ -323,6 +328,7 @@ class Markdown(object):
         if input:
             if isinstance(input, util.string_type):
                 input_file = codecs.open(input, mode="r", encoding=encoding)
+                self.input_file_path = os.path.dirname(os.path.abspath(input))
             else:
                 input_file = codecs.getreader(encoding)(input)
             text = input_file.read()

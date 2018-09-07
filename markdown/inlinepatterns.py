@@ -65,6 +65,9 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 from . import util
 import re
+import os
+import base64
+import mimetypes
 try:  # pragma: no cover
     from html import entities
 except ImportError:  # pragma: no cover
@@ -604,8 +607,21 @@ class ImageInlineProcessor(LinkInlineProcessor):
         if not handled:
             return None, None, None
 
+        #TODO: 'img' should be replaced for other kind of media files, such video, audio, ...
         el = util.etree.Element("img")
 
+        converted_src = None
+        media_path =  os.path.join( os.path.dirname(os.path.abspath(self.md.input_file_path)), src )
+        # if src exists, encode it to base64
+        if os.path.isfile( media_path ):
+            file_mime_type = mimetypes.MimeTypes().guess_type(media_path)[0]
+            if file_mime_type is not None:
+                converted_src = ''.join([ 'data:', file_mime_type, ';base64,'])
+                with open( media_path, 'rb' ) as image_file:
+                    image_data = base64.b64encode(image_file.read())
+                converted_src = ''.join([converted_src.decode('utf-8'), image_data.decode('utf-8')])
+        # replace src
+        src = ( converted_src, src )[ converted_src is None ]
         el.set("src", src)
 
         if title is not None:
