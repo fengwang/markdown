@@ -369,6 +369,31 @@ class Markdown(object):
 
         return self
 
+    def from_file(self, input=None, output=None, encoding=None):
+
+        encoding = encoding or "utf-8"
+
+        # Read the source
+        if input:
+            if isinstance(input, util.string_type):
+                input_file = codecs.open(input, mode="r", encoding=encoding)
+                #self.input_file_path = os.path.dirname(os.path.abspath(input))
+                self.input_file_path = os.path.abspath(input)
+            else:
+                input_file = codecs.getreader(encoding)(input)
+            text = input_file.read()
+            input_file.close()
+        else:
+            text = sys.stdin.read()
+            if not isinstance(text, util.text_type):  # pragma: no cover
+                text = text.decode(encoding)
+
+        text = text.lstrip('\ufeff')  # remove the byte-order mark
+
+        html = self.convert(text)
+        html = html.encode(encoding, "xmlcharrefreplace")
+        return  html
+
 
 """
 EXPORTED FUNCTIONS
@@ -416,4 +441,11 @@ def markdownFromFile(**kwargs):
     md.convertFile(kwargs.get('input', None),
                    kwargs.get('output', None),
                    kwargs.get('encoding', None))
+
+def from_file(**kwargs):
+    md = Markdown(**kwargs)
+    return md.from_file(kwargs.get('input', None),
+                        kwargs.get('output', None),
+                        kwargs.get('encoding', None))
+
 
