@@ -442,7 +442,10 @@ def markdownFromFile(**kwargs):
                    kwargs.get('output', None),
                    kwargs.get('encoding', None))
 
-def from_file(**kwargs):
+def markdown_from_file(**kwargs):
+    """
+    convert html from a file
+    """
     md = Markdown(**kwargs)
     return md.from_file(kwargs.get('input', None),
                         kwargs.get('output', None),
