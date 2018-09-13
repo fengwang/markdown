@@ -22,7 +22,7 @@ License: BSD (see LICENSE.md for details).
 
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from .core import Markdown, markdown, markdownFromFile
+from .core import Markdown, markdown, markdownFromFile, markdown_from_file
 
 # For backward compatibility as some extensions expect it...
 from .extensions import Extension  # noqa
