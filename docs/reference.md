@@ -14,10 +14,18 @@ import markdown
 html = markdown.markdown(your_text_string)
 ```
 
+To use markdown to parse a file:
+
+```python
+import markdown
+html = markdown.markdown_from_file('./I_am_a_banana.md')
+```
+
+
 ## The Details
 
-Python-Markdown provides two public functions ([`markdown.markdown`](#markdown)
-and [`markdown.markdownFromFile`](#markdownFromFile)) both of which wrap the
+Python-Markdown provides three public functions ([`markdown.markdown`](#markdownmarkdowntext--kwargs--markdown-)
+[`markdown.markdown_from_file`](#markdownmarkdown_from_file) and [`markdown.markdownFromFile`](#markdownmarkdownfromfile-kwargs--markdownfromfile-)) both of which wrap the
 public class [`markdown.Markdown`](#Markdown). If you're processing one
 document at a time, these functions will serve your needs. However, if you need
 to process multiple documents, it may be advantageous to create a single
@@ -266,3 +274,45 @@ name on the `markdown.markdownFromFile` function ([`input`](#input),
 process multiple files without creating a new instance of the class for
 each document. State may need to be `reset` between each call to
 `convertFile` as is the case with `convert`.
+
+### markdown.markdown_from_file
+
+The function is of the form:
+
+```python
+def markdown_from_file( input, **kwargs ):
+    XXXXXX
+```
+
+This function take `input` argument for a markdown file to open, returing
+its conveted html code.
+
+The feature of this function is, if there is an image link in this file,
+`markdown` will check if this file exists or not. If this file exists and
+openable, `markdown` will embed the images's `base64` code to the generated
+html file, instead of simply linking a URL.
+
+Example, for an markdown file ( `tmp.md` ) with content like
+
+```markdown
+![](./0_8.png)
+```
+
+and an image `0_8.png` both exists in path `/tmp/xxxx`, calling
+
+```python
+print( markdown.markdown_from_file( '/tmp/xxxx/tmp.md' ) )
+```
+
+will generate html code like
+
+```html
+<img alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAAAAADhZOFXAAAAU0lEQVR4nAFIALf/AQAbOgv+8czlBC5F9Bso5Q/QAY/LcxoMDGYrBAQZ/a0SGB8MAgjpqvfGx9MNBO4ICPzs9f/zASdd/PQM9S2FAQAfYSr+35fiC0sfIOsGuCgAAAAASUVORK5CYII=" />
+```
+
+
+
+
+
+
+
