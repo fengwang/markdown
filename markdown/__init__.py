@@ -27,7 +27,7 @@ from .core import Markdown, markdown, markdownFromFile
 # For backward compatibility as some extensions expect it...
 from .extensions import Extension  # noqa
 
-__all__ = ['Markdown', 'markdown', 'markdownFromFile']
+__all__ = ['Markdown', 'markdown', 'markdownFromFile', 'markdown_from_file']
 
 # version_info should conform to PEP 386
 # (major, minor, micro, alpha/beta/rc/final, #)

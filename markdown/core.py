@@ -37,7 +37,7 @@ from .postprocessors import build_postprocessors
 from .extensions import Extension
 from .serializers import to_html_string, to_xhtml_string
 
-__all__ = ['Markdown', 'markdown', 'markdownFromFile']
+__all__ = ['Markdown', 'markdown', 'markdownFromFile', 'markdown_from_file']
 
 
 logger = logging.getLogger('MARKDOWN')
