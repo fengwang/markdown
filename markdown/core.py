@@ -391,7 +391,7 @@ class Markdown(object):
         text = text.lstrip('\ufeff')  # remove the byte-order mark
 
         html = self.convert(text)
-        html = html.encode(encoding, "xmlcharrefreplace")
+        #html = html.encode(encoding, "xmlcharrefreplace")
         return  html
 
 
