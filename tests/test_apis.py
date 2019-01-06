@@ -901,7 +901,7 @@ class TestCliOptionParsing(unittest.TestCase):
         self.default_options['extension_configs'] = config
         self.assertEqual(options, self.default_options)
 
-    def testExtensonConfigOptionAsJSON(self):
+    def testExtensionConfigOptionAsJSON(self):
         config = {
             'markdown.extensions.wikilinks': {
                 'base_url': 'http://example.com/',
@@ -918,10 +918,10 @@ class TestCliOptionParsing(unittest.TestCase):
         self.default_options['extension_configs'] = config
         self.assertEqual(options, self.default_options)
 
-    def testExtensonConfigOptionMissingFile(self):
+    def testExtensionConfigOptionMissingFile(self):
         self.assertRaises(IOError, parse_options, ['-c', 'missing_file.yaml'])
 
-    def testExtensonConfigOptionBadFormat(self):
+    def testExtensionConfigOptionBadFormat(self):
         config = """
 [footnotes]
 PLACE_MARKER= ~~~footnotes~~~
@@ -940,6 +940,18 @@ class TestEscapeAppend(unittest.TestCase):
         self.assertEqual('|' in md.ESCAPED_CHARS, True)
         md2 = markdown.Markdown()
         self.assertEqual('|' not in md2.ESCAPED_CHARS, True)
+
+
+class TestBlockAppend(unittest.TestCase):
+    """ Tests block kHTML append. """
+
+    def testBlockAppend(self):
+        """ Test that appended escapes are only in the current instance. """
+        md = markdown.Markdown()
+        md.block_level_elements.append('test')
+        self.assertEqual('test' in md.block_level_elements, True)
+        md2 = markdown.Markdown()
+        self.assertEqual('test' not in md2.block_level_elements, True)
 
 
 class TestAncestorExclusion(unittest.TestCase):
@@ -992,3 +1004,42 @@ Some +test+ and a [+link+](http://test.com)
 
         self.md.reset()
         self.assertEqual(self.md.convert(test), result)
+
+
+class TestGeneralDeprecations(unittest.TestCase):
+    """Test general deprecations."""
+
+    def test_version_deprecation(self):
+        """Test that version is deprecated."""
+
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            # Trigger a warning.
+            version = markdown.version
+            # Verify some things
+            self.assertTrue(len(w) == 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+            self.assertEqual(version, markdown.__version__)
+
+    def test_version_info_deprecation(self):
+        """Test that version info is deprecated."""
+
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            # Trigger a warning.
+            version_info = markdown.version_info
+            # Verify some things
+            self.assertTrue(len(w) == 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+            self.assertEqual(version_info, markdown.__version_info__)
+
+    def test_deprecation_wrapper_dir(self):
+        """Tests the `__dir__` attribute of the class as it replaces the module's."""
+
+        dir_attr = dir(markdown)
+        self.assertFalse('version' in dir_attr)
+        self.assertTrue('__version__' in dir_attr)
+        self.assertFalse('version_info' in dir_attr)
+        self.assertTrue('__version_info__' in dir_attr)
