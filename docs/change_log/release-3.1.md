@@ -2,7 +2,7 @@ title: Release Notes for v3.1
 
 # Python-Markdown 3.1 Release Notes
 
-Python-Markdown version 3.1 supports Python versions 2.7, 3.4, 3.5, 3.6, 3.7,
+Python-Markdown version 3.1 supports Python versions 2.7, 3.5, 3.6, 3.7,
 PyPy and PyPy3.
 
 ## Backwards-incompatible changes
@@ -27,10 +27,19 @@ The following new features have been included in the release:
   not valid in HTML5. The `refs` and `backrefs` classes already exist and
   serve the same purpose (#723).
 
+* A new option for `toc_depth` to set not only the bottom section level,
+  but also the top section level. A string consisting of two digits
+  separated by a hyphen in between (`"2-5"`), defines the top (`t`) and the
+  bottom (`b`) (`<ht>..<hb>`). A single integer still defines the bottom
+  section level (`<h1>..<hb>`) only. (#787).
+
 ## Bug fixes
 
 The following bug fixes are included in the 3.1 release:
 
+* Update CLI to support PyYAML 5.1.
+* Overlapping raw HTML matches no longer leave placeholders behind (#458).
+* Emphasis patterns now recognize newline characters as whitespace (#783).
 * Version format had been updated to be PEP 440 compliant (#736).
 * Block level elements are defined per instance, not as class attributes
   (#731).
