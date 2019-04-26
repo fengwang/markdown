@@ -68,6 +68,7 @@ import re
 import os
 import base64
 import mimetypes
+from PIL import Image
 try:  # pragma: no cover
     from html import entities
 except ImportError:  # pragma: no cover
@@ -613,6 +614,7 @@ class ImageInlineProcessor(LinkInlineProcessor):
         converted_src = None
         media_path =  os.path.join( os.path.dirname(os.path.abspath(self.md.input_file_path)), src )
         # if src exists, encode it to base64
+        width, height = None, None
         if os.path.isfile( media_path ):
             file_mime_type = mimetypes.MimeTypes().guess_type(media_path)[0]
             if file_mime_type is not None:
@@ -621,9 +623,15 @@ class ImageInlineProcessor(LinkInlineProcessor):
                     image_data = base64.b64encode(image_file.read())
                 #converted_src = ''.join([converted_src.decode('utf-8'), image_data.decode('utf-8')])
                 converted_src = ''.join([converted_src, image_data.decode('utf-8')])
+                with Image.open(media_path) as img:
+                    width, height = img.size
         # replace src
         src = ( converted_src, src )[ converted_src is None ]
         el.set("src", src)
+
+        if width is not None:
+            if height is not None:
+                el.set( "style", f'style="width:{width}px;height:{height}px;"' )
 
         if title is not None:
             el.set("title", title)
