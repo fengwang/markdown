@@ -14,7 +14,7 @@ Backwards-incompatible Changes
 * Python-Markdown no longer supports Python version 2.6. You must be using Python
   versions 2.7, 3.2, 3.3, or 3.4.
 
-[importlib]: https://pypi.python.org/pypi/importlib
+[importlib]: https://pypi.org/project/importlib/
 
 * The `force_linenos` configuration key on the [CodeHilite Extension] has been **deprecated**
   and will raise a `KeyError` if provided. In the previous release (2.4), it was
@@ -172,9 +172,9 @@ What's New in Python-Markdown 2.5
   files.
 
 [cli]: ../cli.md#using-extensions
-[YAML]: http://yaml.org/
-[JSON]: http://json.org/
-[PyYAML]: http://pyyaml.org/
+[YAML]: https://yaml.org/
+[JSON]: https://json.org/
+[PyYAML]: https://pyyaml.org/
 
 * The [Admonition Extension][ae] is no longer considered "experimental."
 

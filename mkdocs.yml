@@ -31,6 +31,7 @@ nav:
       - Legacy Emphasis: extensions/legacy_em.md
       - Meta-Data: extensions/meta_data.md
       - New Line to Break: extensions/nl2br.md
+      - Markdown in HTML: extensions/md_in_html.md
       - Sane Lists: extensions/sane_lists.md
       - SmartyPants: extensions/smarty.md
       - Table of Contents: extensions/toc.md
@@ -40,6 +41,7 @@ nav:
   - Test Tools: test_tools.md
   - Contributing to Python-Markdown: contributing.md
   - Change Log: change_log/index.md
+  - Release Notes for v.3.2: change_log/release-3.2.md
   - Release Notes for v.3.1: change_log/release-3.1.md
   - Release Notes for v.3.0: change_log/release-3.0.md
   - Release Notes for v.2.6: change_log/release-2.6.md

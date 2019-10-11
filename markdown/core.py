@@ -83,7 +83,7 @@ class Markdown(object):
 
         self.block_level_elements = [
             # Elements which are invalid to wrap in a `<p>` tag.
-            # See http://w3c.github.io/html/grouping-content.html#the-p-element
+            # See https://w3c.github.io/html/grouping-content.html#the-p-element
             'address', 'article', 'aside', 'blockquote', 'details', 'div', 'dl',
             'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3',
             'h4', 'h5', 'h6', 'header', 'hr', 'main', 'menu', 'nav', 'ol', 'p', 'pre',
@@ -170,7 +170,7 @@ class Markdown(object):
         try:
             module = importlib.import_module(ext_name)
             logger.debug(
-                'Successfuly imported extension module "%s".' % ext_name
+                'Successfully imported extension module "%s".' % ext_name
             )
         except ImportError as e:
             message = 'Failed loading extension "%s".' % ext_name

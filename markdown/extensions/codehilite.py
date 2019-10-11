@@ -11,7 +11,7 @@ Original code Copyright 2006-2008 [Waylan Limberg](http://achinghead.com/).
 
 All changes Copyright 2008-2014 The Python Markdown Project
 
-License: [BSD](http://www.opensource.org/licenses/bsd-license.php)
+License: [BSD](https://opensource.org/licenses/bsd-license.php)
 
 """
 
@@ -119,7 +119,8 @@ class CodeHilite(object):
                                               cssclass=self.css_class,
                                               style=self.style,
                                               noclasses=self.noclasses,
-                                              hl_lines=self.hl_lines)
+                                              hl_lines=self.hl_lines,
+                                              wrapcode=True)
             return highlight(self.src, lexer, formatter)
         else:
             # just escape and build markup usable by JS highlighting libs

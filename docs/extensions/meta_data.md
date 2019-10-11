@@ -14,7 +14,7 @@ directly by your python code.
 
 This extension is included in the standard Markdown library.
 
-[MultiMarkdown]: http://fletcherpenney.net/MultiMarkdown_Syntax_Guide#metadata
+[MultiMarkdown]: https://fletcherpenney.net/multimarkdown/#metadata
 
 Syntax
 ------
@@ -59,6 +59,12 @@ Usage
 
 See [Extensions](index.md) for general extension usage. Use `meta` as the name
 of the extension.
+
+A trivial example:
+
+```python
+markdown.markdown(some_text, extensions=['meta'])
+```
 
 Accessing the Meta-Data
 -----------------------

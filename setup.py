@@ -22,9 +22,28 @@ License: BSD (see LICENSE.md for details).
 """
 
 
+import os
+import sys
 from setuptools import setup
-from markdown import __version__, __version_info__
 
+
+def get_version():
+    """Get version and version_info from markdown/__meta__.py file."""
+    module_path = os.path.join(os.path.dirname('__file__'), 'markdown', '__meta__.py')
+
+    if sys.version_info[0] == 2:
+        import imp
+        meta = imp.load_source('__meta__', module_path)
+        return meta.__version__, meta.__version_info__
+
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('__meta__', module_path)
+    meta = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(meta)
+    return meta.__version__, meta.__version_info__
+
+
+__version__, __version_info__ = get_version()
 
 # Get development Status for classifiers
 dev_status_map = {
@@ -48,18 +67,17 @@ though there are a few known issues. See Features_ for information
 on what exactly is supported and what is not. Additional features are
 supported by the `Available Extensions`_.
 
-.. _Markdown: http://daringfireball.net/projects/markdown/
+.. _Markdown: https://daringfireball.net/projects/markdown/
 .. _Features: https://Python-Markdown.github.io#features
 .. _`Available Extensions`: https://Python-Markdown.github.io/extensions/
 
 Support
 =======
 
-You may ask for help and discuss various other issues on the
-`mailing list`_ and report bugs on the `bug tracker`_.
+You may report bugs, ask for help, and discuss various other issues on
+the `bug tracker`_.
 
-.. _`mailing list`: http://lists.sourceforge.net/lists/listinfo/python-markdown-discuss
-.. _`bug tracker`: http://github.com/Python-Markdown/markdown/issues
+.. _`bug tracker`: https://github.com/Python-Markdown/markdown/issues
 '''
 
 
@@ -76,7 +94,7 @@ setup(
     maintainer_email='waylan.limberg@icloud.com',
     license='BSD License',
     packages=['markdown', 'markdown.extensions'],
-    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*',
+    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*',
     install_requires=['setuptools >= 36'],
     extras_require={
         'testing': [
@@ -98,6 +116,7 @@ setup(
             'extra = markdown.extensions.extra:ExtraExtension',
             'fenced_code = markdown.extensions.fenced_code:FencedCodeExtension',
             'footnotes = markdown.extensions.footnotes:FootnoteExtension',
+            'md_in_html = markdown.extensions.md_in_html:MarkdownInHtmlExtension',
             'meta = markdown.extensions.meta:MetaExtension',
             'nl2br = markdown.extensions.nl2br:Nl2BrExtension',
             'sane_lists = markdown.extensions.sane_lists:SaneListExtension',
@@ -117,10 +136,11 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Communications :: Email :: Filters',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content :: CGI Tools/Libraries',
         'Topic :: Internet :: WWW/HTTP :: Site Management',

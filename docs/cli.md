@@ -160,16 +160,30 @@ myext:
     option2: True
 ```
 
+Similarly, a JSON configuration file might look like this:
+
+```json
+{
+  "myext":
+  {
+    "option1": "value1",
+    "option2": "value2"
+  }
+}
+```
+
 Note that while the `--extension_configs` option does specify the
 `myext` extension, you still need to load the extension with the `-x` option,
-or the configuration for that extension will be ignored.
+or the configuration for that extension will be ignored. Further, if an
+extension requires a value that cannot be parsed in JSON (for example a
+reference to a function), one has to use a YAML configuration file.
 
 The `--extension_configs` option will only support YAML configuration files if
 [PyYAML] is installed on your system. JSON should work with no additional
 dependencies. The format of your configuration file is automatically detected.
 
 [ec]: reference.md#extension_configs
-[YAML]: http://yaml.org/
-[JSON]: http://json.org/
-[PyYAML]: http://pyyaml.org/
+[YAML]: https://yaml.org/
+[JSON]: https://json.org/
+[PyYAML]: https://pyyaml.org/
 [2.5 release notes]: change_log/release-2.5.md

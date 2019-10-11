@@ -9,7 +9,7 @@ The WikiLinks extension adds support for [WikiLinks][]. Specifically, any
 
 This extension is included in the standard Markdown library.
 
-[WikiLinks]: http://en.wikipedia.org/wiki/Wikilink
+[WikiLinks]: https://en.wikipedia.org/wiki/Wikilink
 
 ## Syntax
 
@@ -71,6 +71,12 @@ The following options are provided to change the default behavior:
     Default: `'wikilink'`
 
 * **`build_url`**: Callable which formats the URL from its parts.
+
+A trivial example:
+
+```python
+markdown.markdown(some_text, extensions=['wikilinks'])
+```
 
 ### Examples
 

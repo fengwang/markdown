@@ -62,7 +62,7 @@ block will not be highlighted.
 
 [richeland]: https://github.com/richleland
 [rich]: https://github.com/richleland/pygments-css
-[preview]: http://richleland.github.io/pygments-css/
+[preview]: https://richleland.github.io/pygments-css/
 [documentation]: http://pygments.org/docs/
 
 ## Syntax
@@ -79,7 +79,7 @@ code block contains and each one has a different result.
     display of line numbers -- it only serves as a means to define the language
     of the code block.
 
-[syntax]: http://daringfireball.net/projects/markdown/syntax#precode
+[syntax]: https://daringfireball.net/projects/markdown/syntax#precode
 
 ### Shebang (with path)
 
@@ -216,10 +216,23 @@ The following options are provided to configure the output:
     Use inline styles instead of CSS classes. Defaults to `False`.
 
 * **`use_pygments`**:
-    Defaults to `True`. Set to `False` to disable the use of Pygments.
-    If a language is defined for a code block, it will be assigned to the
-    `<code>` tag as a class in the manner suggested by the [HTML5 spec][spec]
-    (alternate output will not be entertained) and might be used by a JavaScript
-    library in the browser to highlight the code block.
+    Specifies the use of Pygments in generating the output.
 
-[spec]: http://www.w3.org/TR/html5/text-level-semantics.html#the-code-element
+    If `True` (the default) and Pygments is available, CodeHilite will use
+    Pygments to analyze and format the output. Additionally, if using Pygments
+    &gt;= 2.4, the output will be wrapped in `<code>` tags, whereas earlier
+    versions will not.
+
+    Otherwise, Pygments will not be used. If a language is defined for a code
+    block, it will be assigned to the `<code>` tag as a class in the manner
+    suggested by the [HTML5 spec][spec] (alternate output will not be
+    entertained) and may be used by a JavaScript library in the browser to
+    highlight the code block.
+    
+A trivial example:
+
+```python
+markdown.markdown(some_text, extensions=['codehilite'])
+```
+
+[spec]: https://www.w3.org/TR/html5/text-level-semantics.html#the-code-element
