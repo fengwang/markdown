@@ -17,9 +17,11 @@ License: [BSD](https://opensource.org/licenses/bsd-license.php)
 
 """
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import Extension
 from ..blockprocessors import BlockProcessor
-import xml.etree.ElementTree as etree
+from ..util import etree
 import re
 
 
@@ -59,7 +61,7 @@ class AdmonitionProcessor(BlockProcessor):
         if m:
             klass, title = self.get_class_and_title(m)
             div = etree.SubElement(parent, 'div')
-            div.set('class', '{} {}'.format(self.CLASSNAME, klass))
+            div.set('class', '%s %s' % (self.CLASSNAME, klass))
             if title:
                 p = etree.SubElement(div, 'p')
                 p.text = title

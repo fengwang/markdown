@@ -3,27 +3,6 @@ title: Change Log
 Python-Markdown Change Log
 =========================
 
-Under development: version 3.3 ([Notes](release-3.3.md)).
-
-May 8, 2020: version 3.2.2 (a bug-fix release).
-
-* Add `checklinks` tox environment to ensure all links in documentation are good.
-* Refactor extension API documentation (#729).
-* Load entry_points (for extensions) only once using `importlib.metadata`.
-* Do not double escape entities in TOC.
-* Correctly report if an extension raises a `TypeError` (#939).
-* Raise a `KeyError` when attempting to delete a nonexistent key from the
-  extension registry (#939).
-* Remove import of `packaging` (or `pkg_resources` fallback) entirely.
-* Remove `setuptools` as a run-time dependency (`install_required`).
-
-Feb 12, 2020: Released version 3.2.1 (a bug-fix release).
-
-* The `name` property in `toc_tokens` from the TOC extension now
-  escapes HTML special characters (`<`, `>`, and `&`).
-
-Feb 7, 2020: Released version 3.2 ([Notes](release-3.2.md)).
-
 May 20, 2019: Released version 3.1.1 (a bug-fix release).
 
 * Fixed import failure in `setup.py` when the source directory is not
@@ -265,4 +244,4 @@ escape, emphasis in the beginning of the paragraph.
 Nov. 2004: Added links, blockquotes, HTML blocks to Manfred
 Stienstra's code
 
-Apr. 2004: Manfred's version at `http://www.dwerg.net/projects/markdown/`
+Apr. 2004: Manfred's version at <http://www.dwerg.net/projects/markdown/>

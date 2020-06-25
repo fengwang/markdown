@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Python Markdown
 
@@ -60,17 +61,15 @@ So, we apply the expressions in the following order:
 * finally we apply strong and emphasis
 """
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import util
 from collections import namedtuple
 import re
-<<<<<<< HEAD
 import os
 import base64
 import mimetypes
 from PIL import Image
-=======
-import xml.etree.ElementTree as etree
->>>>>>> 10058fae6577e79b786f4e185218aebb1b53e937
 try:  # pragma: no cover
     from html import entities
 except ImportError:  # pragma: no cover
@@ -142,8 +141,8 @@ STRONG_EM_RE = r'(\*)\1{2}(.+?)\1{2}(.*?)\1'
 # ___strong__em_
 STRONG_EM2_RE = r'(_)\1{2}(.+?)\1{2}(.*?)\1'
 
-# **strong*em***
-STRONG_EM3_RE = r'(\*)\1(?!\1)([^*]+?)\1(?!\1)(.+?)\1{3}'
+# __strong_em___
+STRONG_EM3_RE = r'(\*)\1(?!\1)(.+?)\1(?!\1)(.+?)\1{3}'
 
 # [text](url) or [text](<url>) or [text](url "title")
 LINK_RE = NOIMG + r'\['
@@ -195,7 +194,7 @@ The pattern classes
 """
 
 
-class Pattern:  # pragma: no cover
+class Pattern(object):  # pragma: no cover
     """Base class that inline patterns subclass. """
 
     ANCESTOR_EXCLUDES = tuple()
@@ -252,7 +251,7 @@ class Pattern:  # pragma: no cover
             id = m.group(1)
             if id in stash:
                 value = stash.get(id)
-                if isinstance(value, str):
+                if isinstance(value, util.string_type):
                     return value
                 else:
                     # An etree Element - return text content only
@@ -326,7 +325,7 @@ class EscapeInlineProcessor(InlineProcessor):
     def handleMatch(self, m, data):
         char = m.group(1)
         if char in self.md.ESCAPED_CHARS:
-            return '{}{}{}'.format(util.STX, ord(char), util.ETX), m.start(0), m.end(0)
+            return '%s%s%s' % (util.STX, ord(char), util.ETX), m.start(0), m.end(0)
         else:
             return None, m.start(0), m.end(0)
 
@@ -342,7 +341,7 @@ class SimpleTagPattern(Pattern):  # pragma: no cover
         self.tag = tag
 
     def handleMatch(self, m):
-        el = etree.Element(self.tag)
+        el = util.etree.Element(self.tag)
         el.text = m.group(3)
         return el
 
@@ -358,7 +357,7 @@ class SimpleTagInlineProcessor(InlineProcessor):
         self.tag = tag
 
     def handleMatch(self, m, data):  # pragma: no cover
-        el = etree.Element(self.tag)
+        el = util.etree.Element(self.tag)
         el.text = m.group(2)
         return el, m.start(0), m.end(0)
 
@@ -366,25 +365,25 @@ class SimpleTagInlineProcessor(InlineProcessor):
 class SubstituteTagPattern(SimpleTagPattern):  # pragma: no cover
     """ Return an element of type `tag` with no children. """
     def handleMatch(self, m):
-        return etree.Element(self.tag)
+        return util.etree.Element(self.tag)
 
 
 class SubstituteTagInlineProcessor(SimpleTagInlineProcessor):
     """ Return an element of type `tag` with no children. """
     def handleMatch(self, m, data):
-        return etree.Element(self.tag), m.start(0), m.end(0)
+        return util.etree.Element(self.tag), m.start(0), m.end(0)
 
 
 class BacktickInlineProcessor(InlineProcessor):
     """ Return a `<code>` element containing the matching text. """
     def __init__(self, pattern):
         InlineProcessor.__init__(self, pattern)
-        self.ESCAPED_BSLASH = '{}{}{}'.format(util.STX, ord('\\'), util.ETX)
+        self.ESCAPED_BSLASH = '%s%s%s' % (util.STX, ord('\\'), util.ETX)
         self.tag = 'code'
 
     def handleMatch(self, m, data):
         if m.group(3):
-            el = etree.Element(self.tag)
+            el = util.etree.Element(self.tag)
             el.text = util.AtomicString(util.code_escape(m.group(3).strip()))
             return el, m.start(0), m.end(0)
         else:
@@ -399,8 +398,8 @@ class DoubleTagPattern(SimpleTagPattern):  # pragma: no cover
     """
     def handleMatch(self, m):
         tag1, tag2 = self.tag.split(",")
-        el1 = etree.Element(tag1)
-        el2 = etree.SubElement(el1, tag2)
+        el1 = util.etree.Element(tag1)
+        el2 = util.etree.SubElement(el1, tag2)
         el2.text = m.group(3)
         if len(m.groups()) == 5:
             el2.tail = m.group(4)
@@ -415,8 +414,8 @@ class DoubleTagInlineProcessor(SimpleTagInlineProcessor):
     """
     def handleMatch(self, m, data):  # pragma: no cover
         tag1, tag2 = self.tag.split(",")
-        el1 = etree.Element(tag1)
-        el2 = etree.SubElement(el1, tag2)
+        el1 = util.etree.Element(tag1)
+        el2 = util.etree.SubElement(el1, tag2)
         el2.text = m.group(2)
         if len(m.groups()) == 3:
             el2.tail = m.group(3)
@@ -462,7 +461,7 @@ class AsteriskProcessor(InlineProcessor):
 
     def build_single(self, m, tag, idx):
         """Return single tag."""
-        el1 = etree.Element(tag)
+        el1 = util.etree.Element(tag)
         text = m.group(2)
         self.parse_sub_patterns(text, el1, None, idx)
         return el1
@@ -471,8 +470,8 @@ class AsteriskProcessor(InlineProcessor):
         """Return double tag."""
 
         tag1, tag2 = tags.split(",")
-        el1 = etree.Element(tag1)
-        el2 = etree.Element(tag2)
+        el1 = util.etree.Element(tag1)
+        el2 = util.etree.Element(tag2)
         text = m.group(2)
         self.parse_sub_patterns(text, el2, None, idx)
         el1.append(el2)
@@ -485,8 +484,8 @@ class AsteriskProcessor(InlineProcessor):
         """Return double tags (variant 2): `<strong>text <em>text</em></strong>`."""
 
         tag1, tag2 = tags.split(",")
-        el1 = etree.Element(tag1)
-        el2 = etree.Element(tag2)
+        el1 = util.etree.Element(tag1)
+        el2 = util.etree.Element(tag2)
         text = m.group(2)
         self.parse_sub_patterns(text, el1, None, idx)
         text = m.group(3)
@@ -612,7 +611,7 @@ class LinkInlineProcessor(InlineProcessor):
         if not handled:
             return None, None, None
 
-        el = etree.Element("a")
+        el = util.etree.Element("a")
         el.text = text
 
         el.set("href", href)
@@ -659,7 +658,7 @@ class LinkInlineProcessor(InlineProcessor):
             # Track last character
             last = ''
 
-            for pos in range(index, len(data)):
+            for pos in util.iterrange(index, len(data)):
                 c = data[pos]
                 if c == '(':
                     # Count nested (
@@ -745,7 +744,7 @@ class LinkInlineProcessor(InlineProcessor):
         """
         bracket_count = 1
         text = []
-        for pos in range(index, len(data)):
+        for pos in util.iterrange(index, len(data)):
             c = data[pos]
             if c == ']':
                 bracket_count -= 1
@@ -770,12 +769,8 @@ class ImageInlineProcessor(LinkInlineProcessor):
         if not handled:
             return None, None, None
 
-<<<<<<< HEAD
         #TODO: 'img' should be replaced for other kind of media files, such video, audio, ...
         el = util.etree.Element("img")
-=======
-        el = etree.Element("img")
->>>>>>> 10058fae6577e79b786f4e185218aebb1b53e937
 
         converted_src = None
         media_path =  os.path.join( os.path.dirname(os.path.abspath(self.md.input_file_path)), src )
@@ -847,7 +842,7 @@ class ReferenceInlineProcessor(LinkInlineProcessor):
         return id, end, True
 
     def makeTag(self, href, title, text):
-        el = etree.Element('a')
+        el = util.etree.Element('a')
 
         el.set('href', href)
         if title:
@@ -868,7 +863,7 @@ class ShortReferenceInlineProcessor(ReferenceInlineProcessor):
 class ImageReferenceInlineProcessor(ReferenceInlineProcessor):
     """ Match to a stored reference and return img element. """
     def makeTag(self, href, title, text):
-        el = etree.Element("img")
+        el = util.etree.Element("img")
         el.set("src", href)
         if title:
             el.set("title", title)
@@ -879,7 +874,7 @@ class ImageReferenceInlineProcessor(ReferenceInlineProcessor):
 class AutolinkInlineProcessor(InlineProcessor):
     """ Return a link Element given an autolink (`<http://example/com>`). """
     def handleMatch(self, m, data):
-        el = etree.Element("a")
+        el = util.etree.Element("a")
         el.set('href', self.unescape(m.group(1)))
         el.text = util.AtomicString(m.group(1))
         return el, m.start(0), m.end(0)
@@ -890,7 +885,7 @@ class AutomailInlineProcessor(InlineProcessor):
     Return a mailto link Element given an automail link (`<foo@example.com>`).
     """
     def handleMatch(self, m, data):
-        el = etree.Element('a')
+        el = util.etree.Element('a')
         email = self.unescape(m.group(1))
         if email.startswith("mailto:"):
             email = email[len("mailto:"):]
@@ -899,7 +894,7 @@ class AutomailInlineProcessor(InlineProcessor):
             """Return entity definition by code, or the code if not defined."""
             entity = entities.codepoint2name.get(code)
             if entity:
-                return "{}{};".format(util.AMP_SUBSTITUTE, entity)
+                return "%s%s;" % (util.AMP_SUBSTITUTE, entity)
             else:
                 return "%s#%d;" % (util.AMP_SUBSTITUTE, code)
 

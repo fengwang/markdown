@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Python Markdown
 
@@ -19,31 +20,31 @@ Copyright 2004 Manfred Stienstra (the original version)
 License: BSD (see LICENSE.md for details).
 """
 
+from __future__ import unicode_literals
 import re
 import sys
 from collections import namedtuple
 from functools import wraps
 import warnings
-import xml.etree.ElementTree
-from .pep562 import Pep562
 
-try:
-    from importlib import metadata
-except ImportError:
-    # <PY38 use backport
-    import importlib_metadata as metadata
 
+"""
+Python 3 Stuff
+=============================================================================
+"""
+PY3 = sys.version_info[0] == 3
 PY37 = (3, 7) <= sys.version_info
 
-
-# TODO: Remove deprecated variables in a future release.
-__deprecated__ = {
-    'etree': ('xml.etree.ElementTree', xml.etree.ElementTree),
-    'string_type': ('str', str),
-    'text_type': ('str', str),
-    'int2str': ('chr', chr),
-    'iterrange': ('range', range)
-}
+if PY3:  # pragma: no cover
+    string_type = str
+    text_type = str
+    int2str = chr
+    iterrange = range
+else:  # pragma: no cover
+    string_type = basestring   # noqa
+    text_type = unicode        # noqa
+    int2str = unichr           # noqa
+    iterrange = xrange         # noqa
 
 
 """
@@ -81,8 +82,6 @@ Constants you probably do not need to change
 -----------------------------------------------------------------------------
 """
 
-# Only load extension entry_points once.
-INSTALLED_EXTENSIONS = metadata.entry_points().get('markdown.extensions', ())
 RTL_BIDI_RANGES = (
     ('\u0590', '\u07FF'),
     # Hebrew (0590-05FF), Arabic (0600-06FF),
@@ -90,6 +89,23 @@ RTL_BIDI_RANGES = (
     # Thaana (0780-07BF), Nko (07C0-07FF).
     ('\u2D30', '\u2D7F')  # Tifinagh
 )
+
+# Extensions should use "markdown.util.etree" instead of "etree" (or do `from
+# markdown.util import etree`).  Do not import it by yourself.
+
+try:  # pragma: no cover
+    # Is the C implementation of ElementTree available?
+    import xml.etree.cElementTree as etree
+    from xml.etree.ElementTree import Comment
+    # Serializers (including ours) test with non-c Comment
+    etree.test_comment = Comment
+    if etree.VERSION < "1.0.5":
+        raise RuntimeError("cElementTree version 1.0.5 or higher is required.")
+except (ImportError, RuntimeError):  # pragma: no cover
+    # Use the Python implementation of ElementTree?
+    import xml.etree.ElementTree as etree
+    if etree.VERSION < "1.1":
+        raise RuntimeError("ElementTree version 1.1 or higher is required")
 
 
 """
@@ -120,7 +136,7 @@ def deprecated(message, stacklevel=2):
 @deprecated("Use 'Markdown.is_block_level' instead.")
 def isBlockLevel(tag):
     """Check if the tag is a block level HTML tag."""
-    if isinstance(tag, str):
+    if isinstance(tag, string_type):
         return tag.lower().rstrip('/') in BLOCK_LEVEL_ELEMENTS
     # Some ElementTree tags are not strings, so return False.
     return False
@@ -131,7 +147,7 @@ def parseBoolValue(value, fail_on_errors=True, preserve_none=False):
        returns True or False. If preserve_none=True, returns True, False,
        or None. If parsing was not successful, raises  ValueError, or, if
        fail_on_errors=False, returns None."""
-    if not isinstance(value, str):
+    if not isinstance(value, string_type):
         if preserve_none and value is None:
             return value
         return bool(value)
@@ -162,12 +178,12 @@ MISC AUXILIARY CLASSES
 """
 
 
-class AtomicString(str):
+class AtomicString(text_type):
     """A string which should not be further processed."""
     pass
 
 
-class Processor:
+class Processor(object):
     def __init__(self, md=None):
         self.md = md
 
@@ -178,7 +194,7 @@ class Processor:
         return self.md
 
 
-class HtmlStash:
+class HtmlStash(object):
     """
     This class is used for stashing HTML objects that we extract
     in the beginning and replace with place-holders.
@@ -232,7 +248,7 @@ class HtmlStash:
 _PriorityItem = namedtuple('PriorityItem', ['name', 'priority'])
 
 
-class Registry:
+class Registry(object):
     """
     A priority sorted registry.
 
@@ -278,7 +294,7 @@ class Registry:
         self._is_sorted = False
 
     def __contains__(self, item):
-        if isinstance(item, str):
+        if isinstance(item, string_type):
             # Check if an item exists by this name.
             return item in self._data.keys()
         # Check if this instance exists.
@@ -303,7 +319,7 @@ class Registry:
         return len(self._priority)
 
     def __repr__(self):
-        return '<{}({})>'.format(self.__class__.__name__, list(self))
+        return '<{0}({1})>'.format(self.__class__.__name__, list(self))
 
     def get_index_for_name(self, name):
         """
@@ -314,7 +330,7 @@ class Registry:
             return self._priority.index(
                 [x for x in self._priority if x.name == name][0]
             )
-        raise ValueError('No item named "{}" exists.'.format(name))
+        raise ValueError('No item named "{0}" exists.'.format(name))
 
     def register(self, item, name, priority):
         """
@@ -367,7 +383,7 @@ class Registry:
 
     def __setitem__(self, key, value):
         """ Register item with priorty 5 less than lowest existing priority. """
-        if isinstance(key, str):
+        if isinstance(key, string_type):
             warnings.warn(
                 'Using setitem to register a processor or pattern is deprecated. '
                 'Use the `register` method instead.',
@@ -399,7 +415,7 @@ class Registry:
                 stacklevel=2,
             )
         else:
-            raise KeyError('Cannot delete key {}, not registered.'.format(key))
+            raise TypeError
 
     def add(self, key, value, location):
         """ Register a key by location. """
@@ -443,21 +459,3 @@ class Registry:
             DeprecationWarning,
             stacklevel=2,
         )
-
-
-def __getattr__(name):
-    """Get attribute."""
-
-    deprecated = __deprecated__.get(name)
-    if deprecated:
-        warnings.warn(
-            "'{}' is deprecated. Use '{}' instead.".format(name, deprecated[0]),
-            category=DeprecationWarning,
-            stacklevel=(3 if PY37 else 4)
-        )
-        return deprecated[1]
-    raise AttributeError("module '{}' has no attribute '{}'".format(__name__, name))
-
-
-if not PY37:
-    Pep562(__name__)

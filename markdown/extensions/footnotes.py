@@ -13,6 +13,8 @@ License: [BSD](https://opensource.org/licenses/bsd-license.php)
 
 """
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import Extension
 from ..preprocessors import Preprocessor
 from ..inlinepatterns import InlineProcessor
@@ -22,7 +24,6 @@ from .. import util
 from collections import OrderedDict
 import re
 import copy
-import xml.etree.ElementTree as etree
 
 FN_BACKLINK_TEXT = util.STX + "zz1337820767766393qq" + util.ETX
 NBSP_PLACEHOLDER = util.STX + "qq3936677670287331zz" + util.ETX
@@ -58,7 +59,7 @@ class FootnoteExtension(Extension):
                 [":",
                  "Footnote separator."]
         }
-        super().__init__(**kwargs)
+        super(FootnoteExtension, self).__init__(**kwargs)
 
         # In multiple invocations, emit links that don't get tangled.
         self.unique_prefix = 0
@@ -151,14 +152,14 @@ class FootnoteExtension(Extension):
         if self.getConfig("UNIQUE_IDS"):
             return 'fn%s%d-%s' % (self.get_separator(), self.unique_prefix, id)
         else:
-            return 'fn{}{}'.format(self.get_separator(), id)
+            return 'fn%s%s' % (self.get_separator(), id)
 
     def makeFootnoteRefId(self, id, found=False):
         """ Return footnote back-link id. """
         if self.getConfig("UNIQUE_IDS"):
             return self.unique_ref('fnref%s%d-%s' % (self.get_separator(), self.unique_prefix, id), found)
         else:
-            return self.unique_ref('fnref{}{}'.format(self.get_separator(), id), found)
+            return self.unique_ref('fnref%s%s' % (self.get_separator(), id), found)
 
     def makeFootnotesDiv(self, root):
         """ Return div of footnotes as et Element. """
@@ -166,14 +167,14 @@ class FootnoteExtension(Extension):
         if not list(self.footnotes.keys()):
             return None
 
-        div = etree.Element("div")
+        div = util.etree.Element("div")
         div.set('class', 'footnote')
-        etree.SubElement(div, "hr")
-        ol = etree.SubElement(div, "ol")
-        surrogate_parent = etree.Element("div")
+        util.etree.SubElement(div, "hr")
+        ol = util.etree.SubElement(div, "ol")
+        surrogate_parent = util.etree.Element("div")
 
         for index, id in enumerate(self.footnotes.keys(), start=1):
-            li = etree.SubElement(ol, "li")
+            li = util.etree.SubElement(ol, "li")
             li.set("id", self.makeFootnoteId(id))
             # Parse footnote with surrogate parent as li cannot be used.
             # List block handlers have special logic to deal with li.
@@ -182,7 +183,7 @@ class FootnoteExtension(Extension):
             for el in list(surrogate_parent):
                 li.append(el)
                 surrogate_parent.remove(el)
-            backlink = etree.Element("a")
+            backlink = util.etree.Element("a")
             backlink.set("href", "#" + self.makeFootnoteRefId(id))
             backlink.set("class", "footnote-backref")
             backlink.set(
@@ -197,7 +198,7 @@ class FootnoteExtension(Extension):
                     node.text = node.text + NBSP_PLACEHOLDER
                     node.append(backlink)
                 else:
-                    p = etree.SubElement(li, "p")
+                    p = util.etree.SubElement(li, "p")
                     p.append(backlink)
         return div
 
@@ -308,18 +309,18 @@ class FootnoteInlineProcessor(InlineProcessor):
     """ InlinePattern for footnote markers in a document's body text. """
 
     def __init__(self, pattern, footnotes):
-        super().__init__(pattern)
+        super(FootnoteInlineProcessor, self).__init__(pattern)
         self.footnotes = footnotes
 
     def handleMatch(self, m, data):
         id = m.group(1)
         if id in self.footnotes.footnotes.keys():
-            sup = etree.Element("sup")
-            a = etree.SubElement(sup, "a")
+            sup = util.etree.Element("sup")
+            a = util.etree.SubElement(sup, "a")
             sup.set('id', self.footnotes.makeFootnoteRefId(id, found=True))
             a.set('href', '#' + self.footnotes.makeFootnoteId(id))
             a.set('class', 'footnote-ref')
-            a.text = str(list(self.footnotes.footnotes.keys()).index(id) + 1)
+            a.text = util.text_type(list(self.footnotes.footnotes.keys()).index(id) + 1)
             return sup, m.start(0), m.end(0)
         else:
             return None, None, None
@@ -347,14 +348,14 @@ class FootnotePostTreeprocessor(Treeprocessor):
                     self.offset += 1
                 # Add all the new duplicate links.
                 el = list(li)[-1]
-                for link in links:
-                    el.append(link)
+                for l in links:
+                    el.append(l)
                 break
 
     def get_num_duplicates(self, li):
         """ Get the number of duplicate refs of the footnote. """
         fn, rest = li.attrib.get('id', '').split(self.footnotes.get_separator(), 1)
-        link_id = '{}ref{}{}'.format(fn, self.footnotes.get_separator(), rest)
+        link_id = '%sref%s%s' % (fn, self.footnotes.get_separator(), rest)
         return self.footnotes.found_refs.get(link_id, 0)
 
     def handle_duplicates(self, parent):

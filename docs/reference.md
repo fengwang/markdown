@@ -33,7 +33,7 @@ instance of the `markdown.Markdown` class and pass multiple documents through
 it. If you do use a single instance though, make sure to call the `reset`
 method appropriately ([see below](#convert)).
 
-### markdown.markdown(text [, **kwargs]) {: #markdown data-toc-label='markdown.markdown' }
+### markdown.markdown(text [, **kwargs]) {: #markdown }
 
 The following options are available on the `markdown.markdown` function:
 
@@ -42,20 +42,24 @@ __text__{: #text }
 :   The source Unicode string. (required)
 
     !!! note "Important"
-        Python-Markdown expects a **Unicode** string as input (some simple ASCII binary strings *may* work only by
-        coincidence) and returns output as a Unicode string. Do not pass binary strings to it! If your input is
-        encoded, (e.g. as UTF-8), it is your responsibility to decode it.  For example:
+        Python-Markdown expects **Unicode** as input (although
+        some simple ASCII strings *may* work) and returns output as Unicode.
+        Do not pass encoded strings to it! If your input is encoded, (e.g. as
+        UTF-8), it is your responsibility to decode it.  For example:
 
             :::python
-            with open("some_file.txt", "r", encoding="utf-8") as input_file:
-                text = input_file.read()
+            input_file = codecs.open("some_file.txt", mode="r", encoding="utf-8")
+            text = input_file.read()
             html = markdown.markdown(text)
 
         If you want to write the output to disk, you *must* encode it yourself:
 
             :::python
-            with open("some_file.html", "w", encoding="utf-8", errors="xmlcharrefreplace") as output_file:
-                output_file.write(html)
+            output_file = codecs.open("some_file.html", "w",
+                                      encoding="utf-8",
+                                      errors="xmlcharrefreplace"
+            )
+            output_file.write(html)
 
 __extensions__{: #extensions }
 
@@ -185,7 +189,7 @@ __tab_length__{: #tab_length }:
 
 : Length of tabs in the source. Default: 4
 
-### `markdown.markdownFromFile (**kwargs)` {: #markdownFromFile data-toc-label='markdown.markdownFromFile' }
+### `markdown.markdownFromFile (**kwargs)` {: #markdownFromFile }
 
 With a few exceptions, `markdown.markdownFromFile` accepts the same options as
 `markdown.markdown`. It does **not** accept a `text` (or Unicode) string.
@@ -224,20 +228,14 @@ __encoding__{: #encoding }
         meet your specific needs, it is suggested that you write your own code
         to handle your encoding/decoding needs.
 
-### markdown.Markdown([**kwargs]) {: #Markdown data-toc-label='markdown.Markdown' }
+### markdown.Markdown([**kwargs]) {: #Markdown }
 
 The same options are available when initializing the `markdown.Markdown` class
 as on the [`markdown.markdown`](#markdown) function, except that the class does
 **not** accept a source text string on initialization. Rather, the source text
-string must be passed to one of two instance methods.
+string must be passed to one of two instance methods:
 
-!!! warning
-
-    Instances of the `markdown.Markdown` class are only thread safe within
-    the thread they were created in. A single instance should not be accessed
-    from multiple threads.
-
-#### Markdown.convert(source) {: #convert data-toc-label='Markdown.convert' }
+#### Markdown.convert(source) {: #convert }
 
 The `source` text must meet the same requirements as the [`text`](#text)
 argument of the [`markdown.markdown`](#markdown) function.
@@ -252,7 +250,8 @@ html2 = md.convert(text2)
 ```
 
 Depending on which options and/or extensions are being used, the parser may
-need its state reset between each call to `convert`.
+need its state reset between each call to `convert`, otherwise performance
+can degrade drastically:
 
 ```python
 html1 = md.convert(text1)
@@ -266,7 +265,7 @@ To make this easier, you can also chain calls to `reset` together:
 html3 = md.reset().convert(text3)
 ```
 
-#### Markdown.convertFile(**kwargs) {: #convertFile data-toc-label='Markdown.convertFile' }
+#### Markdown.convertFile(**kwargs) {: #convertFile }
 
 The arguments of this method are identical to the arguments of the same
 name on the `markdown.markdownFromFile` function ([`input`](#input),

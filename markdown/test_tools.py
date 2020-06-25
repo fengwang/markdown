@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Python Markdown
 
@@ -19,7 +20,9 @@ Copyright 2004 Manfred Stienstra (the original version)
 License: BSD (see LICENSE.md for details).
 """
 
+from __future__ import absolute_import
 import os
+import io
 import unittest
 import textwrap
 from . import markdown
@@ -105,9 +108,9 @@ class LegacyTestMeta(type):
 
         def generate_test(infile, outfile, normalize, kwargs):
             def test(self):
-                with open(infile, encoding="utf-8") as f:
+                with io.open(infile, encoding="utf-8") as f:
                     input = f.read()
-                with open(outfile, encoding="utf-8") as f:
+                with io.open(outfile, encoding="utf-8") as f:
                     # Normalize line endings
                     # (on Windows, git may have altered line endings).
                     expected = f.read().replace("\r\n", "\n")
@@ -147,7 +150,13 @@ class LegacyTestMeta(type):
         return type.__new__(cls, name, bases, dct)
 
 
-class LegacyTestCase(unittest.TestCase, metaclass=LegacyTestMeta):
+# Define LegacyTestCase class with metaclass in Py2 & Py3 compatible way.
+# See https://stackoverflow.com/a/38668373/866026
+# TODO: If/when py2 support is dropped change to:
+# class LegacyTestCase(unittest.Testcase, metaclass=LegacyTestMeta)
+
+
+class LegacyTestCase(LegacyTestMeta('LegacyTestCase', (unittest.TestCase,), {'__slots__': ()})):
     """
     A `unittest.TestCase` subclass for running Markdown's legacy file-based tests.
 
@@ -167,7 +176,7 @@ class LegacyTestCase(unittest.TestCase, metaclass=LegacyTestMeta):
                     arguments for all test files in the directory.
 
     In addition, properties can be defined for each individual set of test files within
-    the directory. The property should be given the name of the file without the file
+    the directory. The property should be given the name of the file wihtout the file
     extension. Any spaces and dashes in the filename should be replaced with
     underscores. The value of the property should be a `Kwargs` instance which
     contains the keyword arguments that should be passed to `Markdown` for that

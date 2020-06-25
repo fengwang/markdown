@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Python Markdown
 
@@ -155,6 +156,8 @@ class TestExtensions(LegacyTestCase):
     toc_nested_list = Kwargs(extensions=['toc'])
 
     wikilinks = Kwargs(extensions=['wikilinks'])
+
+    fenced_code = Kwargs(extensions=['fenced_code'])
 
     github_flavored = Kwargs(extensions=['fenced_code'])
 

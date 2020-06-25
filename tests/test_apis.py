@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Python Markdown
 
@@ -24,6 +25,7 @@ Python-Markdown Regression Tests
 Tests of the various APIs with the python markdown lib.
 """
 
+from __future__ import unicode_literals
 import unittest
 import sys
 import os
@@ -34,8 +36,15 @@ from logging import DEBUG, WARNING, CRITICAL
 import yaml
 import tempfile
 from io import BytesIO
-import xml.etree.ElementTree as etree
 from xml.etree.ElementTree import ProcessingInstruction
+
+
+PY3 = sys.version_info[0] == 3
+
+
+if not PY3:
+    def bytes(string, encoding):
+        return string.encode(encoding)
 
 
 class TestMarkdownBasics(unittest.TestCase):
@@ -123,7 +132,7 @@ class TestBlockParser(unittest.TestCase):
 
     def testParseChunk(self):
         """ Test BlockParser.parseChunk. """
-        root = etree.Element("div")
+        root = markdown.util.etree.Element("div")
         text = 'foo'
         self.parser.parseChunk(root, text)
         self.assertEqual(
@@ -135,8 +144,8 @@ class TestBlockParser(unittest.TestCase):
         """ Test BlockParser.parseDocument. """
         lines = ['#foo', '', 'bar', '', '    baz']
         tree = self.parser.parseDocument(lines)
-        self.assertIsInstance(tree, etree.ElementTree)
-        self.assertIs(etree.iselement(tree.getroot()), True)
+        self.assertIsInstance(tree, markdown.util.etree.ElementTree)
+        self.assertIs(markdown.util.etree.iselement(tree.getroot()), True)
         self.assertEqual(
             markdown.serializers.to_xhtml_string(tree.getroot()),
             "<div><h1>foo</h1><p>bar</p><pre><code>baz\n</code></pre></div>"
@@ -211,7 +220,7 @@ class TestHtmlStash(unittest.TestCase):
         self.assertEqual(self.stash.rawHtmlBlocks, [])
 
 
-class Item:
+class Item(object):
     """ A dummy Registry item object for testing. """
     def __init__(self, data):
         self.data = data
@@ -337,7 +346,7 @@ class RegistryTests(unittest.TestCase):
     def testRegistryDelItem(self):
         r = markdown.util.Registry()
         r.register(Item('a'), 'a', 20)
-        with self.assertRaises(KeyError):
+        with self.assertRaises(TypeError):
             del r[0]
         # TODO: restore this when deprecated __del__ is removed.
         # with self.assertRaises(TypeError):
@@ -352,7 +361,7 @@ class RegistryTests(unittest.TestCase):
             self.assertEqual(list(r), ['a', 'c'])
             del r['a']
             self.assertEqual(list(r), ['c'])
-            with self.assertRaises(KeyError):
+            with self.assertRaises(TypeError):
                 del r['badname']
             del r['c']
             self.assertEqual(list(r), [])
@@ -435,6 +444,12 @@ class TestErrors(unittest.TestCase):
         # Reset warning behavior back to default
         warnings.simplefilter('default')
 
+    def testNonUnicodeSource(self):
+        """ Test falure on non-unicode source text. """
+        if not PY3:
+            source = "foo".encode('utf-16')
+            self.assertRaises(UnicodeDecodeError, markdown.markdown, source)
+
     def testBadOutputFormat(self):
         """ Test failure on bad output_format. """
         self.assertRaises(KeyError, markdown.Markdown, output_format='invalid')
@@ -483,11 +498,15 @@ class testETreeComments(unittest.TestCase):
 
     def setUp(self):
         # Create comment node
-        self.comment = etree.Comment('foo')
+        self.comment = markdown.util.etree.Comment('foo')
+        if hasattr(markdown.util.etree, 'test_comment'):
+            self.test_comment = markdown.util.etree.test_comment
+        else:
+            self.test_comment = markdown.util.etree.Comment
 
     def testCommentIsComment(self):
         """ Test that an ElementTree Comment passes the `is Comment` test. """
-        self.assertIs(self.comment.tag, etree.Comment)
+        self.assertIs(self.comment.tag, markdown.util.etree.test_comment)
 
     def testCommentIsBlockLevel(self):
         """ Test that an ElementTree Comment is recognized as BlockLevel. """
@@ -518,8 +537,8 @@ class testElementTailTests(unittest.TestCase):
 
     def testBrTailNoNewline(self):
         """ Test that last <br> in tree has a new line tail """
-        root = etree.Element('root')
-        br = etree.SubElement(root, 'br')
+        root = markdown.util.etree.Element('root')
+        br = markdown.util.etree.SubElement(root, 'br')
         self.assertEqual(br.tail, None)
         self.pretty.run(root)
         self.assertEqual(br.tail, "\n")
@@ -530,15 +549,15 @@ class testSerializers(unittest.TestCase):
 
     def testHtml(self):
         """ Test HTML serialization. """
-        el = etree.Element('div')
+        el = markdown.util.etree.Element('div')
         el.set('id', 'foo<&">')
-        p = etree.SubElement(el, 'p')
+        p = markdown.util.etree.SubElement(el, 'p')
         p.text = 'foo <&escaped>'
         p.set('hidden', 'hidden')
-        etree.SubElement(el, 'hr')
-        non_element = etree.SubElement(el, None)
+        markdown.util.etree.SubElement(el, 'hr')
+        non_element = markdown.util.etree.SubElement(el, None)
         non_element.text = 'non-element text'
-        script = etree.SubElement(non_element, 'script')
+        script = markdown.util.etree.SubElement(non_element, 'script')
         script.text = '<&"test\nescaping">'
         el.tail = "tail text"
         self.assertEqual(
@@ -553,15 +572,15 @@ class testSerializers(unittest.TestCase):
 
     def testXhtml(self):
         """" Test XHTML serialization. """
-        el = etree.Element('div')
+        el = markdown.util.etree.Element('div')
         el.set('id', 'foo<&">')
-        p = etree.SubElement(el, 'p')
+        p = markdown.util.etree.SubElement(el, 'p')
         p.text = 'foo<&escaped>'
         p.set('hidden', 'hidden')
-        etree.SubElement(el, 'hr')
-        non_element = etree.SubElement(el, None)
+        markdown.util.etree.SubElement(el, 'hr')
+        non_element = markdown.util.etree.SubElement(el, None)
         non_element.text = 'non-element text'
-        script = etree.SubElement(non_element, 'script')
+        script = markdown.util.etree.SubElement(non_element, 'script')
         script.text = '<&"test\nescaping">'
         el.tail = "tail text"
         self.assertEqual(
@@ -576,11 +595,11 @@ class testSerializers(unittest.TestCase):
 
     def testMixedCaseTags(self):
         """" Test preservation of tag case. """
-        el = etree.Element('MixedCase')
+        el = markdown.util.etree.Element('MixedCase')
         el.text = 'not valid '
-        em = etree.SubElement(el, 'EMPHASIS')
+        em = markdown.util.etree.SubElement(el, 'EMPHASIS')
         em.text = 'html'
-        etree.SubElement(el, 'HR')
+        markdown.util.etree.SubElement(el, 'HR')
         self.assertEqual(
             markdown.serializers.to_xhtml_string(el),
             '<MixedCase>not valid <EMPHASIS>html</EMPHASIS><HR /></MixedCase>'
@@ -597,17 +616,17 @@ class testSerializers(unittest.TestCase):
 
     def testQNameTag(self):
         """ Test serialization of QName tag. """
-        div = etree.Element('div')
-        qname = etree.QName('http://www.w3.org/1998/Math/MathML', 'math')
-        math = etree.SubElement(div, qname)
+        div = markdown.util.etree.Element('div')
+        qname = markdown.util.etree.QName('http://www.w3.org/1998/Math/MathML', 'math')
+        math = markdown.util.etree.SubElement(div, qname)
         math.set('display', 'block')
-        sem = etree.SubElement(math, 'semantics')
-        msup = etree.SubElement(sem, 'msup')
-        mi = etree.SubElement(msup, 'mi')
+        sem = markdown.util.etree.SubElement(math, 'semantics')
+        msup = markdown.util.etree.SubElement(sem, 'msup')
+        mi = markdown.util.etree.SubElement(msup, 'mi')
         mi.text = 'x'
-        mn = etree.SubElement(msup, 'mn')
+        mn = markdown.util.etree.SubElement(msup, 'mn')
         mn.text = '2'
-        ann = etree.SubElement(sem, 'annotations')
+        ann = markdown.util.etree.SubElement(sem, 'annotations')
         ann.text = 'x^2'
         self.assertEqual(
             markdown.serializers.to_xhtml_string(div),
@@ -626,8 +645,8 @@ class testSerializers(unittest.TestCase):
 
     def testQNameAttribute(self):
         """ Test serialization of QName attribute. """
-        div = etree.Element('div')
-        div.set(etree.QName('foo'), etree.QName('bar'))
+        div = markdown.util.etree.Element('div')
+        div.set(markdown.util.etree.QName('foo'), markdown.util.etree.QName('bar'))
         self.assertEqual(
             markdown.serializers.to_xhtml_string(div),
             '<div foo="bar"></div>'
@@ -635,14 +654,14 @@ class testSerializers(unittest.TestCase):
 
     def testBadQNameTag(self):
         """ Test serialization of QName with no tag. """
-        qname = etree.QName('http://www.w3.org/1998/Math/MathML')
-        el = etree.Element(qname)
+        qname = markdown.util.etree.QName('http://www.w3.org/1998/Math/MathML')
+        el = markdown.util.etree.Element(qname)
         self.assertRaises(ValueError, markdown.serializers.to_xhtml_string, el)
 
     def testQNameEscaping(self):
         """ Test QName escaping. """
-        qname = etree.QName('<&"test\nescaping">', 'div')
-        el = etree.Element(qname)
+        qname = markdown.util.etree.QName('<&"test\nescaping">', 'div')
+        el = markdown.util.etree.Element(qname)
         self.assertEqual(
             markdown.serializers.to_xhtml_string(el),
             '<div xmlns="&lt;&amp;&quot;test&#10;escaping&quot;&gt;"></div>'
@@ -650,8 +669,8 @@ class testSerializers(unittest.TestCase):
 
     def testQNamePreEscaping(self):
         """ Test QName that is already partially escaped. """
-        qname = etree.QName('&lt;&amp;"test&#10;escaping"&gt;', 'div')
-        el = etree.Element(qname)
+        qname = markdown.util.etree.QName('&lt;&amp;"test&#10;escaping"&gt;', 'div')
+        el = markdown.util.etree.Element(qname)
         self.assertEqual(
             markdown.serializers.to_xhtml_string(el),
             '<div xmlns="&lt;&amp;&quot;test&#10;escaping&quot;&gt;"></div>'
@@ -699,8 +718,8 @@ class testAtomicString(unittest.TestCase):
 
     def testString(self):
         """ Test that a regular string is parsed. """
-        tree = etree.Element('div')
-        p = etree.SubElement(tree, 'p')
+        tree = markdown.util.etree.Element('div')
+        p = markdown.util.etree.SubElement(tree, 'p')
         p.text = 'some *text*'
         new = self.inlineprocessor.run(tree)
         self.assertEqual(
@@ -710,8 +729,8 @@ class testAtomicString(unittest.TestCase):
 
     def testSimpleAtomicString(self):
         """ Test that a simple AtomicString is not parsed. """
-        tree = etree.Element('div')
-        p = etree.SubElement(tree, 'p')
+        tree = markdown.util.etree.Element('div')
+        p = markdown.util.etree.SubElement(tree, 'p')
         p.text = markdown.util.AtomicString('some *text*')
         new = self.inlineprocessor.run(tree)
         self.assertEqual(
@@ -721,14 +740,14 @@ class testAtomicString(unittest.TestCase):
 
     def testNestedAtomicString(self):
         """ Test that a nested AtomicString is not parsed. """
-        tree = etree.Element('div')
-        p = etree.SubElement(tree, 'p')
+        tree = markdown.util.etree.Element('div')
+        p = markdown.util.etree.SubElement(tree, 'p')
         p.text = markdown.util.AtomicString('*some* ')
-        span1 = etree.SubElement(p, 'span')
+        span1 = markdown.util.etree.SubElement(p, 'span')
         span1.text = markdown.util.AtomicString('*more* ')
-        span2 = etree.SubElement(span1, 'span')
+        span2 = markdown.util.etree.SubElement(span1, 'span')
         span2.text = markdown.util.AtomicString('*text* ')
-        span3 = etree.SubElement(span2, 'span')
+        span3 = markdown.util.etree.SubElement(span2, 'span')
         span3.text = markdown.util.AtomicString('*here*')
         span3.tail = markdown.util.AtomicString(' *to*')
         span2.tail = markdown.util.AtomicString(' *test*')
@@ -846,7 +865,7 @@ class TestCliOptionParsing(unittest.TestCase):
 
     def create_config_file(self, config):
         """ Helper to create temp config files. """
-        if not isinstance(config, str):
+        if not isinstance(config, markdown.util.string_type):
             # convert to string
             config = yaml.dump(config)
         fd, self.tempfile = tempfile.mkstemp('.yml')
@@ -945,7 +964,7 @@ class TestAncestorExclusion(unittest.TestCase):
 
         def handleMatch(self, m, data):
             """ Handle match. """
-            el = etree.Element(self.tag)
+            el = markdown.util.etree.Element(self.tag)
             el.text = m.group(2)
             return el, m.start(0), m.end(0)
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Python Markdown
 
@@ -147,5 +148,5 @@ def run():  # pragma: no cover
 
 if __name__ == '__main__':  # pragma: no cover
     # Support running module as a commandline command.
-    # `python -m markdown [options] [args]`.
+    # Python 2.7 & 3.x do: `python -m markdown [options] [args]`.
     run()

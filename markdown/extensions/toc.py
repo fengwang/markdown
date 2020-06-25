@@ -13,14 +13,13 @@ License: [BSD](https://opensource.org/licenses/bsd-license.php)
 
 """
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import Extension
 from ..treeprocessors import Treeprocessor
-from ..util import code_escape, parseBoolValue, AMP_SUBSTITUTE, HTML_PLACEHOLDER_RE, AtomicString
-from ..postprocessors import UnescapePostprocessor
+from ..util import etree, parseBoolValue, AMP_SUBSTITUTE, HTML_PLACEHOLDER_RE, string_type
 import re
-import html
 import unicodedata
-import xml.etree.ElementTree as etree
 
 
 def slugify(value, separator):
@@ -45,19 +44,7 @@ def unique(id, ids):
     return id
 
 
-def get_name(el):
-    """Get title name."""
-
-    text = []
-    for c in el.itertext():
-        if isinstance(c, AtomicString):
-            text.append(html.unescape(c))
-        else:
-            text.append(c)
-    return ''.join(text).strip()
-
-
-def stashedHTML2text(text, md, strip_entities=True):
+def stashedHTML2text(text, md):
     """ Extract raw HTML from stash, reduce to plain text and swap with placeholder. """
     def _html_sub(m):
         """ Substitute raw html with plain text. """
@@ -65,19 +52,10 @@ def stashedHTML2text(text, md, strip_entities=True):
             raw = md.htmlStash.rawHtmlBlocks[int(m.group(1))]
         except (IndexError, TypeError):  # pragma: no cover
             return m.group(0)
-        # Strip out tags and/or entities - leaving text
-        res = re.sub(r'(<[^>]+>)', '', raw)
-        if strip_entities:
-            res = re.sub(r'(&[\#a-zA-Z0-9]+;)', '', res)
-        return res
+        # Strip out tags and entities - leaveing text
+        return re.sub(r'(<[^>]+>)|(&[\#a-zA-Z0-9]+;)', '', raw)
 
     return HTML_PLACEHOLDER_RE.sub(_html_sub, text)
-
-
-def unescape(text):
-    """ Unescape escaped text. """
-    c = UnescapePostprocessor()
-    return c.run(text)
 
 
 def nest_toc_tokens(toc_list):
@@ -145,7 +123,7 @@ def nest_toc_tokens(toc_list):
 
 class TocTreeprocessor(Treeprocessor):
     def __init__(self, md, config):
-        super().__init__(md)
+        super(TocTreeprocessor, self).__init__(md)
 
         self.marker = config["marker"]
         self.title = config["title"]
@@ -153,14 +131,11 @@ class TocTreeprocessor(Treeprocessor):
         self.slugify = config["slugify"]
         self.sep = config["separator"]
         self.use_anchors = parseBoolValue(config["anchorlink"])
-        self.anchorlink_class = config["anchorlink_class"]
         self.use_permalinks = parseBoolValue(config["permalink"], False)
         if self.use_permalinks is None:
             self.use_permalinks = config["permalink"]
-        self.permalink_class = config["permalink_class"]
-        self.permalink_title = config["permalink_title"]
         self.header_rgx = re.compile("[Hh][123456]")
-        if isinstance(config["toc_depth"], str) and '-' in config["toc_depth"]:
+        if isinstance(config["toc_depth"], string_type) and '-' in config["toc_depth"]:
             self.toc_top, self.toc_bottom = [int(x) for x in config["toc_depth"].split('-')]
         else:
             self.toc_top = 1
@@ -175,7 +150,8 @@ class TocTreeprocessor(Treeprocessor):
         for child in node:
             if not self.header_rgx.match(child.tag) and child.tag not in ['pre', 'code']:
                 yield node, child
-                yield from self.iterparent(child)
+                for p, c in self.iterparent(child):
+                    yield p, c
 
     def replace_marker(self, root, elem):
         ''' Replace marker with elem. '''
@@ -204,7 +180,7 @@ class TocTreeprocessor(Treeprocessor):
         anchor = etree.Element("a")
         anchor.text = c.text
         anchor.attrib["href"] = "#" + elem_id
-        anchor.attrib["class"] = self.anchorlink_class
+        anchor.attrib["class"] = "toclink"
         c.text = ""
         for elem in c:
             anchor.append(elem)
@@ -218,9 +194,8 @@ class TocTreeprocessor(Treeprocessor):
                           if self.use_permalinks is True
                           else self.use_permalinks)
         permalink.attrib["href"] = "#" + elem_id
-        permalink.attrib["class"] = self.permalink_class
-        if self.permalink_title:
-            permalink.attrib["title"] = self.permalink_title
+        permalink.attrib["class"] = "headerlink"
+        permalink.attrib["title"] = "Permanent link"
         c.append(permalink)
 
     def build_toc_div(self, toc_list):
@@ -262,24 +237,21 @@ class TocTreeprocessor(Treeprocessor):
 
         toc_tokens = []
         for el in doc.iter():
-            if isinstance(el.tag, str) and self.header_rgx.match(el.tag):
+            if isinstance(el.tag, string_type) and self.header_rgx.match(el.tag):
                 self.set_level(el)
                 if int(el.tag[-1]) < self.toc_top or int(el.tag[-1]) > self.toc_bottom:
                     continue
-                text = get_name(el)
+                text = ''.join(el.itertext()).strip()
 
                 # Do not override pre-existing ids
                 if "id" not in el.attrib:
-                    innertext = unescape(stashedHTML2text(text, self.md))
+                    innertext = stashedHTML2text(text, self.md)
                     el.attrib["id"] = unique(self.slugify(innertext, self.sep), used_ids)
 
                 toc_tokens.append({
                     'level': int(el.tag[-1]),
                     'id': el.attrib["id"],
-                    'name': unescape(stashedHTML2text(
-                        code_escape(el.attrib.get('data-toc-label', text)),
-                        self.md, strip_entities=False
-                    ))
+                    'name': el.attrib.get('data-toc-label', text)
                 })
 
                 # Remove the data-toc-label attribute as it is no longer needed
@@ -288,7 +260,7 @@ class TocTreeprocessor(Treeprocessor):
 
                 if self.use_anchors:
                     self.add_anchor(el, el.attrib["id"])
-                if self.use_permalinks not in [False, None]:
+                if self.use_permalinks:
                     self.add_permalink(el, el.attrib["id"])
 
         toc_tokens = nest_toc_tokens(toc_tokens)
@@ -319,18 +291,9 @@ class TocExtension(Extension):
             "anchorlink": [False,
                            "True if header should be a self link - "
                            "Defaults to False"],
-            "anchorlink_class": ['toclink',
-                                 'CSS class(es) used for the link. '
-                                 'Defaults to "toclink"'],
             "permalink": [0,
                           "True or link text if a Sphinx-style permalink should "
                           "be added - Defaults to False"],
-            "permalink_class": ['headerlink',
-                                'CSS class(es) used for the link. '
-                                'Defaults to "headerlink"'],
-            "permalink_title": ["Permanent link",
-                                "Title attribute of the permalink - "
-                                "Defaults to 'Permanent link'"],
             "baselevel": ['1', 'Base level for headers.'],
             "slugify": [slugify,
                         "Function to generate anchors based on header text - "
@@ -345,7 +308,7 @@ class TocExtension(Extension):
                           'bottom (b) (<ht>..<hb>). Defaults to `6` (bottom).'],
         }
 
-        super().__init__(**kwargs)
+        super(TocExtension, self).__init__(**kwargs)
 
     def extendMarkdown(self, md):
         md.registerExtension(self)

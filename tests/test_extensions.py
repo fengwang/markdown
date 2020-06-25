@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Python Markdown
 
@@ -25,6 +26,7 @@ A collection of regression tests to confirm that the included extensions
 continue to work as advertised. This used to be accomplished by doctests.
 """
 
+from __future__ import unicode_literals
 import unittest
 import markdown
 
@@ -35,8 +37,8 @@ class TestCaseWithAssertStartsWith(unittest.TestCase):
         if not text.startswith(expectedPrefix):
             if len(expectedPrefix) + 5 < len(text):
                 text = text[:len(expectedPrefix) + 5] + '...'
-            standardMsg = '{} not found at the start of {}'.format(repr(expectedPrefix),
-                                                                   repr(text))
+            standardMsg = '%s not found at the start of %s' % (repr(expectedPrefix),
+                                                               repr(text))
             self.fail(self._formatMessage(msg, standardMsg))
 
 
@@ -112,6 +114,389 @@ class TestAbbr(unittest.TestCase):
             '<p><a href="/foo"><abbr title="Abreviation">ABBR</abbr></a> '
             'and <em><abbr title="Abreviation">ABBR</abbr></em></p>'
         )
+
+
+class TestCodeHilite(TestCaseWithAssertStartsWith):
+    """ Test codehilite extension. """
+
+    def setUp(self):
+        self.has_pygments = True
+        try:
+            import pygments  # noqa
+        except ImportError:
+            self.has_pygments = False
+
+    def testBasicCodeHilite(self):
+        text = '\t# A Code Comment'
+        md = markdown.Markdown(extensions=['codehilite'])
+        if self.has_pygments:
+            # Pygments can use random lexer here as we did not specify the language
+            self.assertStartsWith('<div class="codehilite"><pre>', md.convert(text))
+        else:
+            self.assertEqual(
+                md.convert(text),
+                '<pre class="codehilite"><code># A Code Comment'
+                '</code></pre>'
+            )
+
+    def testLinenumsTrue(self):
+        text = '\t# A Code Comment'
+        md = markdown.Markdown(
+            extensions=[markdown.extensions.codehilite.CodeHiliteExtension(linenums=True)])
+        if self.has_pygments:
+            # Different versions of pygments output slightly different markup.
+            # So we use 'startwith' and test just enough to confirm that
+            # pygments received and processed linenums.
+            self.assertStartsWith(
+                '<table class="codehilitetable"><tr><td class="linenos">',
+                md.convert(text)
+            )
+        else:
+            self.assertEqual(
+                md.convert(text),
+                '<pre class="codehilite"><code class="linenums"># A Code Comment'
+                '</code></pre>'
+            )
+
+    def testLinenumsFalse(self):
+        text = '\t#!Python\n\t# A Code Comment'
+        md = markdown.Markdown(
+            extensions=[markdown.extensions.codehilite.CodeHiliteExtension(linenums=False)])
+        if self.has_pygments:
+            self.assertStartsWith('<div class="codehilite"><pre><span', md.convert(text))
+        else:
+            self.assertEqual(
+                md.convert(text),
+                '<pre class="codehilite"><code class="language-python"># A Code Comment'
+                '</code></pre>'
+            )
+
+    def testLinenumsNone(self):
+        text = '\t# A Code Comment'
+        md = markdown.Markdown(
+            extensions=[markdown.extensions.codehilite.CodeHiliteExtension(linenums=None)])
+        if self.has_pygments:
+            # Pygments can use random lexer here as we did not specify the language
+            self.assertStartsWith('<div class="codehilite"><pre>', md.convert(text))
+        else:
+            self.assertEqual(
+                md.convert(text),
+                '<pre class="codehilite"><code># A Code Comment'
+                '</code></pre>'
+            )
+
+    def testLinenumsNoneWithShebang(self):
+        text = '\t#!Python\n\t# A Code Comment'
+        md = markdown.Markdown(
+            extensions=[markdown.extensions.codehilite.CodeHiliteExtension(linenums=None)])
+        if self.has_pygments:
+            # Differant versions of pygments output slightly different markup.
+            # So we use 'startwith' and test just enough to confirm that
+            # pygments received and processed linenums.
+            self.assertStartsWith(
+                '<table class="codehilitetable"><tr><td class="linenos">',
+                md.convert(text)
+            )
+        else:
+            self.assertEqual(
+                md.convert(text),
+                '<pre class="codehilite"><code class="language-python linenums"># A Code Comment'
+                '</code></pre>'
+            )
+
+    def testLinenumsNoneWithColon(self):
+        text = '\t:::Python\n\t# A Code Comment'
+        md = markdown.Markdown(
+            extensions=[markdown.extensions.codehilite.CodeHiliteExtension(linenums=None)]
+        )
+        if self.has_pygments:
+            self.assertStartsWith('<div class="codehilite"><pre><span', md.convert(text))
+        else:
+            self.assertEqual(
+                md.convert(text),
+                '<pre class="codehilite"><code class="language-python"># A Code Comment'
+                '</code></pre>'
+            )
+
+    def testHighlightLinesWithColon(self):
+        # Test with hl_lines delimited by single or double quotes.
+        text0 = '\t:::Python hl_lines="1"\n\t#line 1\n\t#line 2\n\t#line 3'
+        text1 = "\t:::Python hl_lines='1'\n\t#line 1\n\t#line 2\n\t#line 3"
+
+        for text in (text0, text1):
+            md = markdown.Markdown(extensions=['codehilite'])
+            if self.has_pygments:
+                self.assertStartsWith(
+                    '<div class="codehilite"><pre><code><span class="hll"',
+                    md.convert(text).replace('<span></span>', '')
+                )
+            else:
+                self.assertEqual(
+                    md.convert(text),
+                    '<pre class="codehilite">'
+                    '<code class="language-python">#line 1\n'
+                    '#line 2\n'
+                    '#line 3</code></pre>'
+                )
+
+    def testUsePygmentsFalse(self):
+        text = '\t:::Python\n\t# A Code Comment'
+        md = markdown.Markdown(
+            extensions=[markdown.extensions.codehilite.CodeHiliteExtension(use_pygments=False)]
+        )
+        self.assertEqual(
+            md.convert(text),
+            '<pre class="codehilite"><code class="language-python"># A Code Comment'
+            '</code></pre>'
+        )
+
+    def testDoubleEscape(self):
+        """ Test entity escape logic in indented code blocks. """
+
+        text = '\t:::html\n\t<span>This&amp;That</span>'
+        md = markdown.Markdown(
+            extensions=[markdown.extensions.codehilite.CodeHiliteExtension()]
+        )
+        if self.has_pygments:
+            self.assertEqual(
+                md.convert(text),
+                '<div class="codehilite"><pre>'
+                '<span></span>'
+                '<code><span class="p">&lt;</span><span class="nt">span</span><span class="p">&gt;</span>'
+                'This<span class="ni">&amp;amp;</span>That'
+                '<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>'
+                '\n</code></pre></div>'
+            )
+        else:
+            self.assertEqual(
+                md.convert(text),
+                '<pre class="codehilite"><code class="language-html">'
+                '&lt;span&gt;This&amp;amp;That&lt;/span&gt;'
+                '</code></pre>'
+            )
+
+    def testHighlightAmps(self):
+        """ Test amp conversion logic. """
+
+        text = '\t:::text\n\t&\n\t&amp;\n\t&amp;amp;'
+        md = markdown.Markdown(
+            extensions=[markdown.extensions.codehilite.CodeHiliteExtension()]
+        )
+        if self.has_pygments:
+            self.assertEqual(
+                md.convert(text),
+                '<div class="codehilite"><pre><span></span><code>&amp;\n&amp;amp;\n&amp;amp;amp;\n</code></pre></div>'
+            )
+        else:
+            self.assertEqual(
+                md.convert(text),
+                '<pre class="codehilite"><code class="language-text">&amp;\n&amp;amp;\n&amp;amp;amp;</code></pre>'
+            )
+
+
+class TestFencedCode(TestCaseWithAssertStartsWith):
+    """ Test fenced_code extension. """
+
+    def setUp(self):
+        self.md = markdown.Markdown(extensions=['fenced_code'])
+        self.has_pygments = True
+        try:
+            import pygments  # noqa
+        except ImportError:
+            self.has_pygments = False
+
+    def testBasicFence(self):
+        """ Test Fenced Code Blocks. """
+        text = '''
+A paragraph before a fenced code block:
+
+~~~
+Fenced code block
+~~~'''
+        self.assertEqual(
+            self.md.convert(text),
+            '<p>A paragraph before a fenced code block:</p>\n'
+            '<pre><code>Fenced code block\n'
+            '</code></pre>'
+        )
+
+    def testSafeFence(self):
+        """ Test Fenced Code with safe_mode. """
+        text = '~~~\nCode\n~~~'
+        self.md.safeMode = 'replace'
+        self.assertEqual(
+            self.md.convert(text),
+            '<pre><code>Code\n'
+            '</code></pre>'
+        )
+
+    def testNestedFence(self):
+        """ Test nested fence. """
+
+        text = '''
+~~~~~~~~
+
+~~~~
+~~~~~~~~'''
+        self.assertEqual(
+            self.md.convert(text),
+            '<pre><code>\n'
+            '~~~~\n'
+            '</code></pre>'
+        )
+
+    def testFencedLanguage(self):
+        """ Test Language Tags. """
+
+        text = '''
+~~~~{.python}
+# Some python code
+~~~~'''
+        self.assertEqual(
+            self.md.convert(text),
+            '<pre><code class="python"># Some python code\n'
+            '</code></pre>'
+        )
+
+    def testFencedBackticks(self):
+        """ Test Code Fenced with Backticks. """
+
+        text = '''
+`````
+# Arbitrary code
+~~~~~ # these tildes will not close the block
+`````'''
+        self.assertEqual(
+            self.md.convert(text),
+            '<pre><code># Arbitrary code\n'
+            '~~~~~ # these tildes will not close the block\n'
+            '</code></pre>'
+        )
+
+    def testFencedCodeWithHighlightLines(self):
+        """ Test Fenced Code with Highlighted Lines. """
+
+        text = '''
+```hl_lines="1 3"
+line 1
+line 2
+line 3
+```'''
+        md = markdown.Markdown(
+            extensions=[
+                markdown.extensions.codehilite.CodeHiliteExtension(linenums=None, guess_lang=False),
+                'fenced_code'
+            ]
+        )
+
+        if self.has_pygments:
+            self.assertStartsWith(
+                '<div class="codehilite"><pre><code><span class="hll"',
+                md.convert(text).replace('<span></span>', '')
+            )
+        else:
+            self.assertEqual(
+                md.convert(text),
+                '<pre class="codehilite"><code>line 1\n'
+                'line 2\n'
+                'line 3</code></pre>'
+            )
+
+    def testFencedLanguageAndHighlightLines(self):
+        """ Test Fenced Code with Highlighted Lines. """
+
+        text0 = '''
+```.python hl_lines="1 3"
+#line 1
+#line 2
+#line 3
+```'''
+        text1 = '''
+~~~{.python hl_lines='1 3'}
+#line 1
+#line 2
+#line 3
+~~~'''
+        for text in (text0, text1):
+            md = markdown.Markdown(
+                extensions=[
+                    markdown.extensions.codehilite.CodeHiliteExtension(linenums=None, guess_lang=False),
+                    'fenced_code'
+                ]
+            )
+            if self.has_pygments:
+                self.assertStartsWith(
+                    '<div class="codehilite"><pre><code><span class="hll"',
+                    md.convert(text).replace('<span></span>', '')
+                )
+            else:
+                self.assertEqual(
+                    md.convert(text),
+                    '<pre class="codehilite"><code class="language-python">#line 1\n'
+                    '#line 2\n'
+                    '#line 3</code></pre>'
+                )
+
+    def testFencedLanguageAndPygmentsDisabled(self):
+        """ Test if fenced_code honors CodeHilite option use_pygments=False. """
+
+        text = '```python\nfrom __future__ import braces\n```'
+        md = markdown.Markdown(
+            extensions=[
+                markdown.extensions.codehilite.CodeHiliteExtension(use_pygments=False),
+                'fenced_code'
+            ]
+        )
+        self.assertIn('<code class="language-python">', md.convert(text))
+
+    def testFencedLanguageDoubleEscape(self):
+        """ Test entity escape logic in fences. """
+
+        text = '```html\n<span>This&amp;That</span>\n```'
+        md = markdown.Markdown(
+            extensions=[
+                markdown.extensions.codehilite.CodeHiliteExtension(),
+                'fenced_code'
+            ]
+        )
+        if self.has_pygments:
+            self.assertEqual(
+                md.convert(text),
+                '<div class="codehilite"><pre>'
+                '<span></span><code>'
+                '<span class="p">&lt;</span><span class="nt">span</span><span class="p">&gt;</span>'
+                'This<span class="ni">&amp;amp;</span>That'
+                '<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>'
+                '\n</code></pre></div>'
+            )
+        else:
+            self.assertEqual(
+                md.convert(text),
+                '<pre class="codehilite"><code class="language-html">'
+                '&lt;span&gt;This&amp;amp;That&lt;/span&gt;'
+                '</code></pre>'
+            )
+
+    def testFencedAmps(self):
+        """ Test amp conversion. """
+
+        text = '```text\n&\n&amp;\n&amp;amp;\n```'
+        md = markdown.Markdown(
+            extensions=[
+                markdown.extensions.codehilite.CodeHiliteExtension(),
+                'fenced_code'
+            ]
+        )
+        if self.has_pygments:
+            self.assertEqual(
+                md.convert(text),
+                '<div class="codehilite"><pre><span></span><code>&amp;\n&amp;amp;\n&amp;amp;amp;\n</code></pre></div>'
+            )
+        else:
+            self.assertEqual(
+                md.convert(text),
+                '<pre class="codehilite"><code class="language-text">&amp;\n&amp;amp;\n&amp;amp;amp;</code></pre>'
+            )
 
 
 class TestMetaData(unittest.TestCase):
@@ -397,7 +782,6 @@ class TestTOC(TestCaseWithAssertStartsWith):
         self.assertStartsWith('<div class="toc">', self.md.toc)
         self.md.reset()
         self.assertEqual(self.md.toc, '')
-        self.assertEqual(self.md.toc_tokens, [])
 
     def testUniqueIds(self):
         """ Test Unique IDs. """
@@ -409,21 +793,6 @@ class TestTOC(TestCaseWithAssertStartsWith):
             '<h1 id="header_1">Header</h1>\n'
             '<h1 id="header_2">Header</h1>'
         )
-        self.assertEqual(
-            self.md.toc,
-            '<div class="toc">\n'
-              '<ul>\n'                                       # noqa
-                '<li><a href="#header">Header</a></li>\n'    # noqa
-                '<li><a href="#header_1">Header</a></li>\n'  # noqa
-                '<li><a href="#header_2">Header</a></li>\n'  # noqa
-              '</ul>\n'                                      # noqa
-            '</div>\n'
-        )
-        self.assertEqual(self.md.toc_tokens, [
-            {'level': 1, 'id': 'header', 'name': 'Header', 'children': []},
-            {'level': 1, 'id': 'header_1', 'name': 'Header', 'children': []},
-            {'level': 1, 'id': 'header_2', 'name': 'Header', 'children': []},
-        ])
 
     def testHtmlEntities(self):
         """ Test Headers with HTML Entities. """
@@ -432,36 +801,6 @@ class TestTOC(TestCaseWithAssertStartsWith):
             self.md.convert(text),
             '<h1 id="foo-bar">Foo &amp; bar</h1>'
         )
-        self.assertEqual(
-            self.md.toc,
-            '<div class="toc">\n'
-              '<ul>\n'                                             # noqa
-                '<li><a href="#foo-bar">Foo &amp; bar</a></li>\n'  # noqa
-              '</ul>\n'                                            # noqa
-            '</div>\n'
-        )
-        self.assertEqual(self.md.toc_tokens, [
-            {'level': 1, 'id': 'foo-bar', 'name': 'Foo &amp; bar', 'children': []},
-        ])
-
-    def testHtmlSpecialChars(self):
-        """ Test Headers with HTML special characters. """
-        text = '# Foo > & bar'
-        self.assertEqual(
-            self.md.convert(text),
-            '<h1 id="foo-bar">Foo &gt; &amp; bar</h1>'
-        )
-        self.assertEqual(
-            self.md.toc,
-            '<div class="toc">\n'
-              '<ul>\n'                                                  # noqa
-                '<li><a href="#foo-bar">Foo &gt; &amp; bar</a></li>\n'  # noqa
-              '</ul>\n'                                                 # noqa
-            '</div>\n'
-        )
-        self.assertEqual(self.md.toc_tokens, [
-            {'level': 1, 'id': 'foo-bar', 'name': 'Foo &gt; &amp; bar', 'children': []},
-        ])
 
     def testRawHtml(self):
         """ Test Headers with raw HTML. """
@@ -470,17 +809,6 @@ class TestTOC(TestCaseWithAssertStartsWith):
             self.md.convert(text),
             '<h1 id="foo-bar-baz">Foo <b>Bar</b> Baz.</h1>'
         )
-        self.assertEqual(
-            self.md.toc,
-            '<div class="toc">\n'
-              '<ul>\n'                                                # noqa
-                '<li><a href="#foo-bar-baz">Foo Bar Baz.</a></li>\n'  # noqa
-              '</ul>\n'                                               # noqa
-            '</div>\n'
-        )
-        self.assertEqual(self.md.toc_tokens, [
-            {'level': 1, 'id': 'foo-bar-baz', 'name': 'Foo Bar Baz.', 'children': []},
-        ])
 
     def testBaseLevel(self):
         """ Test Header Base Level. """
@@ -507,12 +835,6 @@ class TestTOC(TestCaseWithAssertStartsWith):
               '</ul>\n'                                                # noqa
             '</div>\n'
         )
-        self.assertEqual(md.toc_tokens, [
-            {'level': 5, 'id': 'some-header', 'name': 'Some Header', 'children': [
-                {'level': 6, 'id': 'next-level', 'name': 'Next Level', 'children': []},
-                {'level': 6, 'id': 'too-high', 'name': 'Too High', 'children': []},
-            ]},
-        ])
 
     def testHeaderInlineMarkup(self):
         """ Test Headers with inline markup. """
@@ -523,18 +845,6 @@ class TestTOC(TestCaseWithAssertStartsWith):
             '<h1 id="some-header-with-markup">Some <em>Header</em> with '
             '<a href="http://example.com">markup</a>.</h1>'
         )
-        self.assertEqual(
-            self.md.toc,
-            '<div class="toc">\n'
-              '<ul>\n'                                     # noqa
-                '<li><a href="#some-header-with-markup">'  # noqa
-                  'Some Header with markup.</a></li>\n'    # noqa
-              '</ul>\n'                                    # noqa
-            '</div>\n'
-        )
-        self.assertEqual(self.md.toc_tokens, [
-            {'level': 1, 'id': 'some-header-with-markup', 'name': 'Some Header with markup.', 'children': []},
-        ])
 
     def testAnchorLink(self):
         """ Test TOC Anchorlink. """
@@ -634,50 +944,47 @@ class TestTOC(TestCaseWithAssertStartsWith):
     def testWithAttrList(self):
         """ Test TOC with attr_list Extension. """
         md = markdown.Markdown(extensions=['toc', 'attr_list'])
-        text = ('# Header 1\n\n'
-                '## Header 2 { #foo }\n\n'
-                '## Header 3 { data-toc-label="Foo Bar" }\n\n'
-                '# Header 4 { data-toc-label="Foo > Baz" }\n\n'
-                '# Header 5 { data-toc-label="Foo <b>Quux</b>" }')
-
+        text = '# Header 1\n\n## Header 2 { #foo }\n\n## Header 3 { data-toc-label="Foo Bar"}'
         self.assertEqual(
             md.convert(text),
             '<h1 id="header-1">Header 1</h1>\n'
             '<h2 id="foo">Header 2</h2>\n'
-            '<h2 id="header-3">Header 3</h2>\n'
-            '<h1 id="header-4">Header 4</h1>\n'
-            '<h1 id="header-5">Header 5</h1>'
+            '<h2 id="header-3">Header 3</h2>'
         )
         self.assertEqual(
             md.toc,
             '<div class="toc">\n'
-              '<ul>\n'                                             # noqa
-                '<li><a href="#header-1">Header 1</a>'             # noqa
-                  '<ul>\n'                                         # noqa
-                    '<li><a href="#foo">Header 2</a></li>\n'       # noqa
-                    '<li><a href="#header-3">Foo Bar</a></li>\n'   # noqa
-                  '</ul>\n'                                        # noqa
-                '</li>\n'                                          # noqa
-                '<li><a href="#header-4">Foo &gt; Baz</a></li>\n'  # noqa
-                '<li><a href="#header-5">Foo Quux</a></li>\n'      # noqa
-              '</ul>\n'                                            # noqa
+              '<ul>\n'                                           # noqa
+                '<li><a href="#header-1">Header 1</a>'           # noqa
+                  '<ul>\n'                                       # noqa
+                    '<li><a href="#foo">Header 2</a></li>\n'     # noqa
+                    '<li><a href="#header-3">Foo Bar</a></li>\n' # noqa
+                  '</ul>\n'                                      # noqa
+                '</li>\n'                                        # noqa
+              '</ul>\n'                                          # noqa
             '</div>\n'
         )
-        self.assertEqual(md.toc_tokens, [
-            {'level': 1, 'id': 'header-1', 'name': 'Header 1', 'children': [
-                {'level': 2, 'id': 'foo', 'name': 'Header 2', 'children': []},
-                {'level': 2, 'id': 'header-3', 'name': 'Foo Bar', 'children': []}
-            ]},
-            {'level': 1, 'id': 'header-4', 'name': 'Foo &gt; Baz', 'children': []},
-            {'level': 1, 'id': 'header-5', 'name': 'Foo Quux', 'children': []},
-        ])
+        self.assertEqual(
+            md.toc_tokens,
+            [
+                {
+                    'level': 1,
+                    'id': 'header-1',
+                    'name': 'Header 1',
+                    'children': [
+                        {'level': 2, 'id': 'foo', 'name': 'Header 2', 'children': []},
+                        {'level': 2, 'id': 'header-3', 'name': 'Foo Bar', 'children': []}
+                    ]
+                }
+            ]
+        )
 
     def testUniqueFunc(self):
         """ Test 'unique' function. """
         from markdown.extensions.toc import unique
-        ids = {'foo'}
+        ids = set(['foo'])
         self.assertEqual(unique('foo', ids), 'foo_1')
-        self.assertEqual(ids, {'foo', 'foo_1'})
+        self.assertEqual(ids, set(['foo', 'foo_1']))
 
     def testTocInHeaders(self):
 

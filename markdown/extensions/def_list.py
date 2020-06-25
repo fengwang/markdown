@@ -15,9 +15,11 @@ License: [BSD](https://opensource.org/licenses/bsd-license.php)
 
 """
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import Extension
 from ..blockprocessors import BlockProcessor, ListIndentProcessor
-import xml.etree.ElementTree as etree
+from ..util import etree
 import re
 
 
@@ -34,8 +36,8 @@ class DefListProcessor(BlockProcessor):
 
         raw_block = blocks.pop(0)
         m = self.RE.search(raw_block)
-        terms = [term.strip() for term in
-                 raw_block[:m.start()].split('\n') if term.strip()]
+        terms = [l.strip() for l in
+                 raw_block[:m.start()].split('\n') if l.strip()]
         block = raw_block[m.end():]
         no_indent = self.NO_INDENT_RE.match(block)
         if no_indent:
@@ -43,7 +45,7 @@ class DefListProcessor(BlockProcessor):
         else:
             d, theRest = self.detab(block)
         if d:
-            d = '{}\n{}'.format(m.group(2), d)
+            d = '%s\n%s' % (m.group(2), d)
         else:
             d = m.group(2)
         sibling = self.lastChild(parent)

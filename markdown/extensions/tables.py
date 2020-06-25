@@ -15,9 +15,11 @@ License: [BSD](https://opensource.org/licenses/bsd-license.php)
 
 """
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import Extension
 from ..blockprocessors import BlockProcessor
-import xml.etree.ElementTree as etree
+from ..util import etree
 import re
 PIPE_NONE = 0
 PIPE_LEFT = 1
@@ -33,7 +35,7 @@ class TableProcessor(BlockProcessor):
     def __init__(self, parser):
         self.border = False
         self.separator = ''
-        super().__init__(parser)
+        super(TableProcessor, self).__init__(parser)
 
     def test(self, parent, block):
         """

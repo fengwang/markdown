@@ -1,15 +1,15 @@
 [Python-Markdown][]
 ===================
 
-[![Build Status][build-button]][build]
+[![Build Status][travis-button]][travis]
 [![Coverage Status][codecov-button]][codecov]
 [![Latest Version][mdversion-button]][md-pypi]
 [![Python Versions][pyversion-button]][md-pypi]
 [![BSD License][bsdlicense-button]][bsdlicense]
 [![Code of Conduct][codeofconduct-button]][Code of Conduct]
 
-[build-button]: https://github.com/Python-Markdown/markdown/workflows/CI/badge.svg?event=push
-[build]: https://github.com/Python-Markdown/markdown/actions?query=workflow%3ACI+event%3Apush
+[travis-button]: https://img.shields.io/travis/Python-Markdown/markdown.svg
+[travis]: https://travis-ci.org/Python-Markdown/markdown
 [codecov-button]: https://codecov.io/gh/Python-Markdown/markdown/branch/master/graph/badge.svg
 [codecov]: https://codecov.io/gh/Python-Markdown/markdown
 [mdversion-button]: https://img.shields.io/pypi/v/Markdown.svg

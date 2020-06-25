@@ -15,6 +15,8 @@ License: [BSD](https://opensource.org/licenses/bsd-license.php)
 
 """
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import Extension
 from ..blockprocessors import OListProcessor, UListProcessor
 import re
@@ -26,7 +28,7 @@ class SaneOListProcessor(OListProcessor):
     LAZY_OL = False
 
     def __init__(self, parser):
-        super().__init__(parser)
+        super(SaneOListProcessor, self).__init__(parser)
         self.CHILD_RE = re.compile(r'^[ ]{0,%d}((\d+\.))[ ]+(.*)' %
                                    (self.tab_length - 1))
 
@@ -36,7 +38,7 @@ class SaneUListProcessor(UListProcessor):
     SIBLING_TAGS = ['ul']
 
     def __init__(self, parser):
-        super().__init__(parser)
+        super(SaneUListProcessor, self).__init__(parser)
         self.CHILD_RE = re.compile(r'^[ ]{0,%d}(([*+-]))[ ]+(.*)' %
                                    (self.tab_length - 1))
 
