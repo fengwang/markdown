@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Python Markdown
 
@@ -20,7 +19,6 @@ Copyright 2004 Manfred Stienstra (the original version)
 License: BSD (see LICENSE.md for details).
 """
 
-from __future__ import unicode_literals
 from markdown.test_tools import TestCase
 
 
@@ -51,4 +49,18 @@ class TestLegacyEm(TestCase):
             'This is text __bold_italic bold___ with more text',
             '<p>This is text <strong>bold<em>italic bold</em></strong> with more text</p>',
             extensions=['legacy_em']
+        )
+
+    def test_complex_multple_underscore_type(self):
+
+        self.assertMarkdownRenders(
+            'traced ___along___ bla __blocked__ if other ___or___',
+            '<p>traced <strong><em>along</em></strong> bla <strong>blocked</strong> if other <strong><em>or</em></strong></p>'  # noqa: E501
+        )
+
+    def test_complex_multple_underscore_type_variant2(self):
+
+        self.assertMarkdownRenders(
+            'on the __1-4 row__ of the AP Combat Table ___and___ receive',
+            '<p>on the <strong>1-4 row</strong> of the AP Combat Table <strong><em>and</em></strong> receive</p>'
         )

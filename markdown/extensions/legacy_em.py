@@ -10,8 +10,6 @@ License: [BSD](https://opensource.org/licenses/bsd-license.php)
 
 '''
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 from . import Extension
 from ..inlinepatterns import UnderscoreProcessor, EmStrongItem, EM_STRONG2_RE, STRONG_EM2_RE
 import re
@@ -23,7 +21,7 @@ EMPHASIS_RE = r'(_)([^_]+)\1'
 STRONG_RE = r'(_{2})(.+?)\1'
 
 # __strong_em___
-STRONG_EM_RE = r'(_)\1(?!\1)(.+?)\1(?!\1)(.+?)\1{3}'
+STRONG_EM_RE = r'(_)\1(?!\1)([^_]+?)\1(?!\1)(.+?)\1{3}'
 
 
 class LegacyUnderscoreProcessor(UnderscoreProcessor):

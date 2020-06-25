@@ -9,7 +9,7 @@ propose changes to this document in a pull request.
 
 This project and everyone participating in it is governed by the
 [Python-Markdown Code of Conduct]. By participating, you are expected to uphold
-this code. Please report unacceptable behavior to <markdown@freewisdom.org>.
+this code. Please report unacceptable behavior to [markdown@freewisdom.org][email].
 
 ## Project Organization
 
@@ -94,7 +94,7 @@ along with a request for feedback.
 
 Pull requests will generally not be accepted if any tests are failing.
 Therefore, it is recommended that you run the tests before submitting your pull
-request. After making a pull request, check the Travis build status in the
+request. After making a pull request, check the build status in the
 GitHub interface to ensure that all tests are running as expected. If any checks
 fail, you may push additional commits to your branch. GitHub will add those
 commits to the pull request and rerun the checks.
@@ -335,6 +335,12 @@ with no arguments. See help (`tox -h`) for more options.
     dependencies may differ significantly from system to system and is outside
     the scope of this guide.
 
+!!! seealso "See Also"
+
+    Python-Markdown provides [test tools] which simply testing Markdown syntax.
+    Understanding those tools will often help in understanding why a test may be
+    failing.
+
 ## Versions
 
 Python-Markdown follows [Semantic Versioning] and uses the
@@ -401,20 +407,25 @@ following steps:
 
         Bump version to X.X.X
 
-6. After all checks (Travis, etc.) have passed, merge the pull request.
+6. After all checks have passed, merge the pull request.
 
 7. Create a git tag with the new version as the tag name and push to the
-   [Python-Markdown/markdown] repository.
+   [Python-Markdown/markdown] repository. The new tag should trigger a GitHub
+   workflow which will automatically deploy the release to PyPI and update the
+   documentation.
 
-8. Deploy the release to [PyPI] with the command `make deploy`.
+    In the event that the deployment fails, the following steps can be taken to
+    deploy manually:
 
-9. Deploy an update to the documentation using [MkDocs]. The following example
-   assumes that local clones of the [Python-Markdown/markdown] and
-   [Python-Markdown/Python-Markdown.github.io] repositories are in sibling
-   directories named `markdown` and `Python-Markdown.github.io` respectively.
+    - Deploy the release to [PyPI] with the command `make deploy`.
 
-        cd Python-Markdown.github.io
-        mkdocs gh-deploy --config-file ../markdown/mkdocs.yml --remote-branch master
+    - Deploy an update to the documentation using [MkDocs]. The following example
+      assumes that local clones of the [Python-Markdown/markdown] and
+      [Python-Markdown/Python-Markdown.github.io] repositories are in sibling
+      directories named `markdown` and `Python-Markdown.github.io` respectively.
+
+            cd Python-Markdown.github.io
+            mkdocs gh-deploy --config-file ../markdown/mkdocs.yml --remote-branch master
 
 ## Issue and Pull Request Labels
 
@@ -467,6 +478,7 @@ label from the same group.
 
 [Python-Markdown Organization]: https://github.com/Python-Markdown
 [Python-Markdown Code of Conduct]: https://github.com/Python-Markdown/markdown/blob/master/CODE_OF_CONDUCT.md
+[email]: mailto:markdown@freewisdom.org
 [Python-Markdown/markdown]: https://github.com/Python-Markdown/markdown
 [issue tracker]: https://github.com/Python-Markdown/markdown/issues
 [syntax rules]: https://daringfireball.net/projects/markdown/syntax
@@ -489,12 +501,13 @@ label from the same group.
 [configure a remote]: https://help.github.com/articles/configuring-a-remote-for-a-fork
 [sync changes]: https://help.github.com/articles/syncing-a-fork
 [virtual environment]: https://virtualenv.pypa.io/en/stable/
-[User Guide]: https://virtualenv.pypa.io/en/stable/userguide/#usage
+[User Guide]: https://virtualenv.pypa.io/en/stable/user_guide.html
 [Development Mode]: https://setuptools.readthedocs.io/en/latest/setuptools.html#development-mode
 [PyTidyLib]: https://countergram.github.io/pytidylib/
 [HTML Tidy]: https://www.html-tidy.org/
 [tox]: https://tox.readthedocs.io/en/latest/
 [aspell]: http://aspell.net/
+[test tools]: test_tools.md
 [Semantic Versioning]: https://semver.org/
 [markdown/__init__.py]: https://github.com/Python-Markdown/markdown/blob/master/markdown/__init__.py#L43
 [PEP 440]: https://www.python.org/dev/peps/pep-0440/

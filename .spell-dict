@@ -30,9 +30,10 @@ deregister
 Dmitry
 docdata
 ElementTree
+encodings
 extendMarkdown
 Fauske
-Formatter
+formatter
 Fortin
 GitHub
 globals
@@ -58,6 +59,7 @@ Manfed
 markdownFromFile
 Maruku
 md
+metadata
 MkDocs
 multi
 MultiMarkdown
@@ -75,6 +77,8 @@ PHP
 Posix
 postprocessor
 postprocessors
+prepend
+prepended
 preprocessor
 preprocessors
 Pygments
@@ -111,6 +115,7 @@ stdout
 Stelios
 Stienstra
 subclasses
+SuperFences
 svn
 Swartz
 Szakmeister
@@ -126,6 +131,8 @@ Treeprocessor
 Treeprocessors
 tuple
 tuples
+unescape
+unittest
 unordered
 untrusted
 UTF

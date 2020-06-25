@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Python Markdown
 
@@ -23,18 +22,12 @@ License: BSD (see LICENSE.md for details).
 
 
 import os
-import sys
 from setuptools import setup
 
 
 def get_version():
     """Get version and version_info from markdown/__meta__.py file."""
     module_path = os.path.join(os.path.dirname('__file__'), 'markdown', '__meta__.py')
-
-    if sys.version_info[0] == 2:
-        import imp
-        meta = imp.load_source('__meta__', module_path)
-        return meta.__version__, meta.__version_info__
 
     import importlib.util
     spec = importlib.util.spec_from_file_location('__meta__', module_path)
@@ -59,43 +52,30 @@ DEVSTATUS = dev_status_map[__version_info__[3]]
 # conflict with the perl implimentation (which uses "markdown").
 SCRIPT_NAME = 'markdown_py'
 
-
-long_description = '''
-This is a Python implementation of John Gruber's Markdown_.
-It is almost completely compliant with the reference implementation,
-though there are a few known issues. See Features_ for information
-on what exactly is supported and what is not. Additional features are
-supported by the `Available Extensions`_.
-
-.. _Markdown: https://daringfireball.net/projects/markdown/
-.. _Features: https://Python-Markdown.github.io#features
-.. _`Available Extensions`: https://Python-Markdown.github.io/extensions/
-
-Support
-=======
-
-You may report bugs, ask for help, and discuss various other issues on
-the `bug tracker`_.
-
-.. _`bug tracker`: https://github.com/Python-Markdown/markdown/issues
-'''
-
+with open('README.md') as f:
+    long_description = f.read()
 
 setup(
     name='Markdown',
     version=__version__,
     url='https://Python-Markdown.github.io/',
     download_url='http://pypi.python.org/packages/source/M/Markdown/Markdown-%s-py2.py3-none-any.whl' % __version__,
+    project_urls={
+        'Documentation': 'https://Python-Markdown.github.io/',
+        'GitHub Project': 'https://github.com/Python-Markdown/markdown',
+        'Issue Tracker': 'https://github.com/Python-Markdown/markdown/issues'
+    },
     description='Python implementation of Markdown.',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Manfred Stienstra, Yuri takhteyev and Waylan limberg',
     author_email='waylan.limberg@icloud.com',
     maintainer='Waylan Limberg',
     maintainer_email='waylan.limberg@icloud.com',
     license='BSD License',
     packages=['markdown', 'markdown.extensions'],
-    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*',
-    install_requires=['setuptools >= 36'],
+    python_requires='>=3.5',
+    install_requires=["importlib-metadata;python_version<'3.8'"],
     extras_require={
         'testing': [
             'coverage',
@@ -133,12 +113,12 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Communications :: Email :: Filters',

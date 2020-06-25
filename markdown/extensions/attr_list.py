@@ -17,8 +17,6 @@ License: [BSD](https://opensource.org/licenses/bsd-license.php)
 
 """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 from . import Extension
 from ..treeprocessors import Treeprocessor
 import re
@@ -145,7 +143,7 @@ class AttrListTreeprocessor(Treeprocessor):
                 # add to class
                 cls = elem.get('class')
                 if cls:
-                    elem.set('class', '%s %s' % (cls, v))
+                    elem.set('class', '{} {}'.format(cls, v))
                 else:
                     elem.set('class', v)
             else:
@@ -163,6 +161,7 @@ class AttrListTreeprocessor(Treeprocessor):
 class AttrListExtension(Extension):
     def extendMarkdown(self, md):
         md.treeprocessors.register(AttrListTreeprocessor(md), 'attr_list', 8)
+        md.registerExtension(self)
 
 
 def makeExtension(**kwargs):  # pragma: no cover

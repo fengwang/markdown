@@ -16,13 +16,12 @@ License: [BSD](https://opensource.org/licenses/bsd-license.php)
 
 '''
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 from . import Extension
 from ..preprocessors import Preprocessor
 from ..inlinepatterns import InlineProcessor
-from ..util import etree, AtomicString
+from ..util import AtomicString
 import re
+import xml.etree.ElementTree as etree
 
 # Global Vars
 ABBR_REF_RE = re.compile(r'[*]\[(?P<abbr>[^\]]*)\][ ]?:\s*(?P<title>.*)')
@@ -81,7 +80,7 @@ class AbbrInlineProcessor(InlineProcessor):
     """ Abbreviation inline pattern. """
 
     def __init__(self, pattern, title):
-        super(AbbrInlineProcessor, self).__init__(pattern)
+        super().__init__(pattern)
         self.title = title
 
     def handleMatch(self, m, data):
