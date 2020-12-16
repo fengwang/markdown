@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Python Markdown
 
@@ -309,6 +308,22 @@ class TestHorizontalRules(TestCase):
             )
         )
 
+    def test_hr_after_emstrong(self):
+        self.assertMarkdownRenders(
+            self.dedent(
+                """
+                ***text***
+                ***
+                """
+            ),
+            self.dedent(
+                """
+                <p><strong><em>text</em></strong></p>
+                <hr />
+                """
+            )
+        )
+
     def test_not_hr_2_asterisks(self):
         self.assertMarkdownRenders(
             '**',
@@ -361,4 +376,27 @@ class TestHorizontalRules(TestCase):
             '_ _',
 
             '<p>_ _</p>'
+        )
+
+    def test_2_consecutive_hr(self):
+        self.assertMarkdownRenders(
+            self.dedent(
+                """
+                - - -
+                - - -
+                """
+            ),
+            self.dedent(
+                """
+                <hr />
+                <hr />
+                """
+            )
+        )
+
+    def test_not_hr_end_in_char(self):
+        self.assertMarkdownRenders(
+            '--------------------------------------c',
+
+            '<p>--------------------------------------c</p>'
         )

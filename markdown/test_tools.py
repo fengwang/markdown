@@ -22,10 +22,10 @@ License: BSD (see LICENSE.md for details).
 
 from __future__ import absolute_import
 import os
-import io
+import sys
 import unittest
 import textwrap
-from . import markdown
+from . import markdown, util
 
 try:
     import tidylib
@@ -76,6 +76,32 @@ class TestCase(unittest.TestCase):
         return textwrap.dedent(text).strip()
 
 
+class recursionlimit:
+    """
+    A context manager which temporarily modifies the Python recursion limit.
+
+    The testing framework, coverage, etc. may add an arbitrary number of levels to the depth. To maintain consistency
+    in the tests, the current stack depth is determined when called, then added to the provided limit.
+
+    Example usage:
+
+        with recursionlimit(20):
+            # test code here
+
+    See https://stackoverflow.com/a/50120316/866026
+    """
+
+    def __init__(self, limit):
+        self.limit = util._get_stack_depth() + limit
+        self.old_limit = sys.getrecursionlimit()
+
+    def __enter__(self):
+        sys.setrecursionlimit(self.limit)
+
+    def __exit__(self, type, value, tb):
+        sys.setrecursionlimit(self.old_limit)
+
+
 #########################
 # Legacy Test Framework #
 #########################
@@ -116,8 +142,11 @@ class LegacyTestMeta(type):
                     expected = f.read().replace("\r\n", "\n")
                 output = markdown(input, **kwargs)
                 if tidylib and normalize:
-                    expected = _normalize_whitespace(expected)
-                    output = _normalize_whitespace(output)
+                    try:
+                        expected = _normalize_whitespace(expected)
+                        output = _normalize_whitespace(output)
+                    except OSError:
+                        self.skipTest("Tidylib's c library not available.")
                 elif normalize:
                     self.skipTest('Tidylib not available.')
                 self.assertMultiLineEqual(output, expected)

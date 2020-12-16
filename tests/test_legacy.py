@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Python Markdown
 
@@ -157,8 +156,6 @@ class TestExtensions(LegacyTestCase):
 
     wikilinks = Kwargs(extensions=['wikilinks'])
 
-    fenced_code = Kwargs(extensions=['fenced_code'])
-
     github_flavored = Kwargs(extensions=['fenced_code'])
 
     sane_lists = Kwargs(extensions=['sane_lists'])
@@ -186,8 +183,6 @@ class TestExtensionsExtra(LegacyTestCase):
     footnotes = Kwargs(extensions=['footnotes'])
 
     tables = Kwargs(extensions=['tables'])
-
-    tables_and_attr_list = Kwargs(extensions=['tables', 'attr_list'])
 
     extra_config = Kwargs(
         extensions=['extra'],

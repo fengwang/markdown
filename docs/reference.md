@@ -14,18 +14,10 @@ import markdown
 html = markdown.markdown(your_text_string)
 ```
 
-To use markdown to parse a file:
-
-```python
-import markdown
-html = markdown.markdown_from_file('./I_am_a_banana.md')
-```
-
-
 ## The Details
 
-Python-Markdown provides three public functions ([`markdown.markdown`](#markdownmarkdowntext--kwargs--markdown-)
-[`markdown.markdown_from_file`](#markdownmarkdown_from_file) and [`markdown.markdownFromFile`](#markdownmarkdownfromfile-kwargs--markdownfromfile-)) both of which wrap the
+Python-Markdown provides two public functions ([`markdown.markdown`](#markdown)
+and [`markdown.markdownFromFile`](#markdownFromFile)) both of which wrap the
 public class [`markdown.Markdown`](#Markdown). If you're processing one
 document at a time, these functions will serve your needs. However, if you need
 to process multiple documents, it may be advantageous to create a single
@@ -33,7 +25,7 @@ instance of the `markdown.Markdown` class and pass multiple documents through
 it. If you do use a single instance though, make sure to call the `reset`
 method appropriately ([see below](#convert)).
 
-### markdown.markdown(text [, **kwargs]) {: #markdown }
+### markdown.markdown(text [, **kwargs]) {: #markdown data-toc-label='markdown.markdown' }
 
 The following options are available on the `markdown.markdown` function:
 
@@ -42,24 +34,20 @@ __text__{: #text }
 :   The source Unicode string. (required)
 
     !!! note "Important"
-        Python-Markdown expects **Unicode** as input (although
-        some simple ASCII strings *may* work) and returns output as Unicode.
-        Do not pass encoded strings to it! If your input is encoded, (e.g. as
-        UTF-8), it is your responsibility to decode it.  For example:
+        Python-Markdown expects a **Unicode** string as input (some simple ASCII binary strings *may* work only by
+        coincidence) and returns output as a Unicode string. Do not pass binary strings to it! If your input is
+        encoded, (e.g. as UTF-8), it is your responsibility to decode it.  For example:
 
             :::python
-            input_file = codecs.open("some_file.txt", mode="r", encoding="utf-8")
-            text = input_file.read()
+            with open("some_file.txt", "r", encoding="utf-8") as input_file:
+                text = input_file.read()
             html = markdown.markdown(text)
 
         If you want to write the output to disk, you *must* encode it yourself:
 
             :::python
-            output_file = codecs.open("some_file.html", "w",
-                                      encoding="utf-8",
-                                      errors="xmlcharrefreplace"
-            )
-            output_file.write(html)
+            with open("some_file.html", "w", encoding="utf-8", errors="xmlcharrefreplace") as output_file:
+                output_file.write(html)
 
 __extensions__{: #extensions }
 
@@ -189,7 +177,7 @@ __tab_length__{: #tab_length }:
 
 : Length of tabs in the source. Default: 4
 
-### `markdown.markdownFromFile (**kwargs)` {: #markdownFromFile }
+### `markdown.markdownFromFile (**kwargs)` {: #markdownFromFile data-toc-label='markdown.markdownFromFile' }
 
 With a few exceptions, `markdown.markdownFromFile` accepts the same options as
 `markdown.markdown`. It does **not** accept a `text` (or Unicode) string.
@@ -228,14 +216,20 @@ __encoding__{: #encoding }
         meet your specific needs, it is suggested that you write your own code
         to handle your encoding/decoding needs.
 
-### markdown.Markdown([**kwargs]) {: #Markdown }
+### markdown.Markdown([**kwargs]) {: #Markdown data-toc-label='markdown.Markdown' }
 
 The same options are available when initializing the `markdown.Markdown` class
 as on the [`markdown.markdown`](#markdown) function, except that the class does
 **not** accept a source text string on initialization. Rather, the source text
-string must be passed to one of two instance methods:
+string must be passed to one of two instance methods.
 
-#### Markdown.convert(source) {: #convert }
+!!! warning
+
+    Instances of the `markdown.Markdown` class are only thread safe within
+    the thread they were created in. A single instance should not be accessed
+    from multiple threads.
+
+#### Markdown.convert(source) {: #convert data-toc-label='Markdown.convert' }
 
 The `source` text must meet the same requirements as the [`text`](#text)
 argument of the [`markdown.markdown`](#markdown) function.
@@ -250,8 +244,7 @@ html2 = md.convert(text2)
 ```
 
 Depending on which options and/or extensions are being used, the parser may
-need its state reset between each call to `convert`, otherwise performance
-can degrade drastically:
+need its state reset between each call to `convert`.
 
 ```python
 html1 = md.convert(text1)
@@ -265,7 +258,7 @@ To make this easier, you can also chain calls to `reset` together:
 html3 = md.reset().convert(text3)
 ```
 
-#### Markdown.convertFile(**kwargs) {: #convertFile }
+#### Markdown.convertFile(**kwargs) {: #convertFile data-toc-label='Markdown.convertFile' }
 
 The arguments of this method are identical to the arguments of the same
 name on the `markdown.markdownFromFile` function ([`input`](#input),
@@ -274,45 +267,3 @@ name on the `markdown.markdownFromFile` function ([`input`](#input),
 process multiple files without creating a new instance of the class for
 each document. State may need to be `reset` between each call to
 `convertFile` as is the case with `convert`.
-
-### markdown.markdown_from_file
-
-The function is of the form:
-
-```python
-def markdown_from_file( input, **kwargs ):
-    XXXXXX
-```
-
-This function take `input` argument for a markdown file to open, returing
-its conveted html code.
-
-The feature of this function is, if there is an image link in this file,
-`markdown` will check if this file exists or not. If this file exists and
-openable, `markdown` will embed the images's `base64` code to the generated
-html file, instead of simply linking a URL.
-
-Example, for an markdown file ( `tmp.md` ) with content like
-
-```markdown
-![](./0_8.png)
-```
-
-and an image `0_8.png` both exists in path `/tmp/xxxx`, calling
-
-```python
-print( markdown.markdown_from_file( '/tmp/xxxx/tmp.md' ) )
-```
-
-will generate html code like
-
-```html
-<img alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAAAAADhZOFXAAAAU0lEQVR4nAFIALf/AQAbOgv+8czlBC5F9Bso5Q/QAY/LcxoMDGYrBAQZ/a0SGB8MAgjpqvfGx9MNBO4ICPzs9f/zASdd/PQM9S2FAQAfYSr+35fiC0sfIOsGuCgAAAAASUVORK5CYII=" />
-```
-
-
-
-
-
-
-

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Python Markdown
 
@@ -158,4 +157,28 @@ class TestAdvancedImages(TestCase):
         self.assertMarkdownRenders(
             """![Image](http://humane man.jpg)""",
             """<p><img alt="Image" src="http://humane man.jpg" /></p>"""
+        )
+
+    def test_short_ref(self):
+        self.assertMarkdownRenders(
+            self.dedent(
+                """
+                ![ref]
+
+                [ref]: ./image.jpg
+                """
+            ),
+            '<p><img alt="ref" src="./image.jpg" /></p>'
+        )
+
+    def test_short_ref_in_link(self):
+        self.assertMarkdownRenders(
+            self.dedent(
+                """
+                [![img ref]](http://example.com/)
+
+                [img ref]: ./image.jpg
+                """
+            ),
+            '<p><a href="http://example.com/"><img alt="img ref" src="./image.jpg" /></a></p>'
         )
